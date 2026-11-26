@@ -38,12 +38,16 @@ dotnet publish MarkdownLab/MarkdownLab.csproj -c Release -r win-x64 --self-conta
 
 ## Scope
 
-MarkdownLab 1.0 focuses on reading and editing. PDF export, plugins, and cloud synchronization are intentionally out of scope.
+MarkdownLab 1.1 focuses on reading and editing. PDF export, plugins, and cloud synchronization are intentionally out of scope.
 
 ## Security note
 
-Only open Markdown files from sources you trust. The HTML preview is rendered locally by the Windows embedded browser and may reference local image files. External links open in the system browser.
+Only open Markdown files from sources you trust. The preview uses Microsoft Edge WebView2 Runtime (required on Windows). Raw HTML is disabled and navigation is blocked. Relative local images may be limited by WebView2 security policies.
 
 ## License
 
 MIT.
+
+## Version 1.1
+
+Modern toolbar, welcome screen, resizable outline, AvalonEdit line numbers, document statistics and application icon.

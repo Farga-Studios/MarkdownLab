@@ -5,10 +5,14 @@
     <UseWPF>true</UseWPF>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationIcon>Assets/MarkdownLab.ico</ApplicationIcon>
     <AssemblyName>MarkdownLab</AssemblyName>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
   </PropertyGroup>
   <ItemGroup>
+    <Resource Include="Assets/MarkdownLab.ico" />
+    <PackageReference Include="AvalonEdit" Version="6.3.1.120" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
     <PackageReference Include="Markdig" Version="0.41.3" />
   </ItemGroup>
 </Project>
