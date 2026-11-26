@@ -67,3 +67,7 @@ About dialog with automatic assembly version, organization, license and reposito
 ## 1.4.0
 
 Document tabs, recent files, folder browsing, recovery snapshots, replace all, image drag/drop and file-based preview. Recovery snapshots every 15 seconds; original files are not overwritten automatically.
+
+## 1.4.1
+
+Restore NavigateToString preview; serve local raster images through a dedicated WebView2 virtual host and local image cache.
