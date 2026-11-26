@@ -55,3 +55,7 @@ Modern toolbar, welcome screen, resizable outline, AvalonEdit line numbers, docu
 ## Version 1.2
 
 Save As (Ctrl+Shift+S), editor context menu, Ctrl+F, and Markdown formatting toolbar with syntax tooltips in edit and split modes.
+
+## 1.3.0
+
+Desktop menus, heading selector, smart lists, image picker (URL or local), visual table picker, Ctrl+B/I, Alt+Up/Down, word wrap, collapsible search, approximate editor-to-preview scroll sync. Local raster preview embeds images up to 750 KB each; WebView2 HTML size limits still apply.

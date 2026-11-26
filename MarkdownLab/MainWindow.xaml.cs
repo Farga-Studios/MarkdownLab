@@ -24,6 +24,9 @@ public partial class MainWindow : Window
     private ViewMode mode = ViewMode.Read;
     private bool ready;
     private bool started;
+    private bool syncScroll = true;
+    private bool suppressList;
+    private string? activeList;
     private bool outlineVisible = true;
     private readonly List<(string Heading, string Slug)> headings = new();
     private enum ViewMode { Read, Edit, Split }
@@ -31,6 +34,10 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        Editor.TextArea.Caret.PositionChanged += (_, _) => UpdateListButtons();
+        Editor.TextArea.TextView.ScrollOffsetChanged += (_, _) => SyncPreview();
+        Editor.PreviewKeyDown += EditorKeys;
+        Editor.TextArea.TextEntering += AutoPair;
         Editor.SyntaxHighlighting = ICSharpCode.AvalonEdit.Highlighting.HighlightingManager.Instance.GetDefinitionByExtension(".md");
         refreshTimer.Tick += (_, _) => { refreshTimer.Stop(); RefreshPreview(); };
         Loaded += async (_, _) => {
@@ -48,6 +55,7 @@ public partial class MainWindow : Window
                 Preview.CoreWebView2.NavigationCompleted += (_, e) => {
                     if (!e.IsSuccess && e.WebErrorStatus != Microsoft.Web.WebView2.Core.CoreWebView2WebErrorStatus.OperationCanceled)
                         StatusText.Text = "Error de vista previa: " + e.WebErrorStatus;
+                    else if (e.IsSuccess) SyncPreview();
                 };
                 Preview.CoreWebView2.NewWindowRequested += (_, e) => { e.Handled = true; };
                 ready = true; RefreshPreview();
@@ -119,7 +127,7 @@ public partial class MainWindow : Window
         var markdown = Editor.Text;
         DocumentName.Text = (filePath is null ? "Sin título" : Path.GetFileName(filePath)) + (dirty ? " *" : "");
         Stats.Text = $"{Regex.Matches(markdown, @"\S+").Count} palabras   ·   {markdown.Length} caracteres   ·   UTF-8   ·   {zoom:P0}";
-        var html = Markdown.ToHtml(markdown, pipeline);
+        var html = EmbedLocalImages(Markdown.ToHtml(markdown, pipeline));
         headings.Clear();
         // Explicit anchors make the outline work even with duplicate heading titles.
         var number = 0;
@@ -212,7 +220,7 @@ public partial class MainWindow : Window
         OutlineSplitter.Visibility = outlineVisible ? Visibility.Visible : Visibility.Collapsed;
     }
     private void SaveAs_Click(object sender, RoutedEventArgs e) => SaveFile(true);
-    private void FocusSearch() { SearchBox.Focus(); SearchBox.SelectAll(); }
+    private void FocusSearch() { SearchBar.Visibility = Visibility.Visible; SearchBox.Focus(); SearchBox.SelectAll(); }
     private void EditorMenu_Click(object sender, RoutedEventArgs e)
     {
         if (sender is not MenuItem item) return;
@@ -237,7 +245,20 @@ public partial class MainWindow : Window
 
     private void Format_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is not Button button || button.Tag is not string tag) return;
+        if (sender is not FrameworkElement element || element.Tag is not string tag) return;
+        ApplyFormat(tag);
+    }
+
+    private void ApplyFormat(string tag)
+    {
+        if (!started) return;
+        if (mode == ViewMode.Read) { mode = ViewMode.Edit; ApplyMode(); }
+        if (tag == "image") { InsertImage(); return; }
+        if (tag == "table") { InsertTable(); return; }
+        if (tag is "bullet" or "number" or "task") {
+            if (activeList == tag && !suppressList) { suppressList = true; UpdateListButtons(); return; }
+            suppressList = false;
+        }
         var selected = Editor.SelectedText;
         var offset = Editor.SelectionStart;
         var length = Editor.SelectionLength;
@@ -245,7 +266,7 @@ public partial class MainWindow : Window
         string replacement;
         int selectStart = 0, selectLength = 0;
         string? prefix = tag switch {
-            "h1" => "# ", "h2" => "## ", "h3" => "### ", "h4" => "#### ", "h5" => "##### ", "h6" => "###### ",
+            "normal" => "", "h1" => "# ", "h2" => "## ", "h3" => "### ", "h4" => "#### ", "h5" => "##### ", "h6" => "###### ",
             "bullet" => "- ", "number" => "1. ", "task" => "- [ ] ", "quote" => "> ", _ => null
         };
         if (prefix is not null)
@@ -255,7 +276,7 @@ public partial class MainWindow : Window
             offset = first.Offset; length = last.EndOffset - offset;
             var lines = Editor.Document.GetText(offset, length).Replace("\r\n", "\n").Split('\n');
             replacement = string.Join(Environment.NewLine, lines.Select((line, i) =>
-                (tag == "number" ? $"{i + 1}. " : prefix) + (tag.StartsWith("h") ? Regex.Replace(line, @"^#{1,6}\s+", "") : line)));
+                (tag == "number" ? $"{i + 1}. " : prefix) + (tag.StartsWith("h") || tag == "normal" ? Regex.Replace(line, @"^#{1,6}\s+", "") : tag is "bullet" or "number" or "task" ? Regex.Replace(line, @"^\s*(?:\d+\. |[-+*] (?:\[[ xX]\] )?)", "") : line)));
             selectStart = prefix.Length; selectLength = replacement.Length - selectStart;
         }
         else
@@ -273,6 +294,120 @@ public partial class MainWindow : Window
         Editor.Focus();
         Editor.Select(offset + selectStart, selectLength);
         if (selectLength == 0) Editor.CaretOffset = offset + replacement.Length;
+        UpdateListButtons();
+    }
+
+    private void Exit_Click(object sender, RoutedEventArgs e) => Close();
+    private void CloseSearch_Click(object sender, RoutedEventArgs e) { SearchBar.Visibility = Visibility.Collapsed; Editor.Focus(); }
+    private void Wrap_Click(object sender, RoutedEventArgs e) => Editor.WordWrap = !Editor.WordWrap;
+    private void Sync_Click(object sender, RoutedEventArgs e) { syncScroll = !syncScroll; StatusText.Text = syncScroll ? "Desplazamiento sincronizado" : "Desplazamiento independiente"; SyncPreview(); }
+    private void Help_Click(object sender, RoutedEventArgs e) => MessageBox.Show("# Encabezado\n**Negrita** · *Cursiva* · ~~Tachado~~\n- Lista · 1. Numerada · - [ ] Tarea\n[Texto](URL) · ![Imagen](URL)\nCtrl+B / Ctrl+I · Alt+↑/↓ mover línea", "Sintaxis Markdown");
+    private void Heading_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (HeadingPicker.SelectedItem is ComboBoxItem item && item.Tag is string tag) { ApplyFormat(tag); HeadingPicker.SelectedIndex = -1; }
+    }
+    private static readonly Regex ListPattern = new(@"^(\s*)(?:(\d+)\. |([-+*]) (\[[ xX]\] )?|(>) ?)(.*)$");
+    private void UpdateListButtons()
+    {
+        var line = Editor.Document.GetLineByOffset(Editor.CaretOffset);
+        var m = ListPattern.Match(Editor.Document.GetText(line.Offset, line.Length));
+        var next = !m.Success ? null : m.Groups[2].Success ? "number" : m.Groups[4].Success ? "task" : m.Groups[3].Success ? "bullet" : "quote";
+        if (next != activeList) suppressList = false;
+        activeList = next;
+        foreach (var (button, tag) in new[] { (BulletButton,"bullet"), (NumberButton,"number"), (TaskButton,"task") })
+            button.Background = (Brush)Resources[!suppressList && activeList == tag ? "Accent" : "Panel"];
+    }
+    private void EditorKeys(object sender, KeyEventArgs e)
+    {
+        if (Keyboard.Modifiers == ModifierKeys.Control && e.Key is Key.B or Key.I)
+        { e.Handled = true; ApplyFormat(e.Key == Key.B ? "bold" : "italic"); return; }
+        if (Keyboard.Modifiers == ModifierKeys.Alt && e.Key is Key.Up or Key.Down)
+        { e.Handled = true; MoveLine(e.Key == Key.Up); return; }
+        if (e.Key != Key.Enter || Keyboard.Modifiers != ModifierKeys.None || Editor.SelectionLength != 0) return;
+        var line = Editor.Document.GetLineByOffset(Editor.CaretOffset);
+        if (Editor.CaretOffset != line.EndOffset) return;
+        var m = ListPattern.Match(Editor.Document.GetText(line.Offset, line.Length));
+        if (!m.Success) return;
+        if (suppressList) { suppressList = false; return; }
+        e.Handled = true;
+        if (string.IsNullOrWhiteSpace(m.Groups[6].Value)) { Editor.Document.Replace(line.Offset, line.Length, ""); Editor.CaretOffset = line.Offset; return; }
+        var marker = m.Groups[2].Success && int.TryParse(m.Groups[2].Value, out var n) && n < int.MaxValue ? $"{n+1}. " : m.Groups[4].Success ? m.Groups[3].Value + " [ ] " : m.Groups[3].Success ? m.Groups[3].Value + " " : "> ";
+        var insert = Environment.NewLine + m.Groups[1].Value + marker;
+        int offset = Editor.CaretOffset; Editor.Document.Insert(offset, insert); Editor.CaretOffset = offset + insert.Length;
+    }
+    private void AutoPair(object? sender, TextCompositionEventArgs e)
+    {
+        if (e.Text.Length != 1) return;
+        var close = e.Text switch { "(" => ")", "[" => "]", _ => null };
+        if (close is null) return;
+        int offset = Editor.SelectionStart; var selected = Editor.SelectedText;
+        Editor.Document.Replace(offset, Editor.SelectionLength, e.Text + selected + close);
+        Editor.Select(offset + 1, selected.Length); e.Handled = true;
+    }
+    private void MoveLine(bool up)
+    {
+        var doc = Editor.Document; var line = doc.GetLineByOffset(Editor.CaretOffset);
+        var other = up ? line.PreviousLine : line.NextLine; if (other is null) return;
+        var first = up ? other : line; var second = up ? line : other;
+        var a = doc.GetText(first.Offset, first.Length); var b = doc.GetText(second.Offset, second.Length);
+        var sep = doc.GetText(first.EndOffset, first.DelimiterLength);
+        int start = first.Offset; int col = Editor.CaretOffset - line.Offset;
+        doc.Replace(start, second.EndOffset - start, b + sep + a);
+        Editor.CaretOffset = start + (up ? 0 : b.Length + sep.Length) + col;
+    }
+    private void SyncPreview()
+    {
+        if (!ready || !syncScroll || mode != ViewMode.Split) return;
+        var range = Editor.ExtentHeight - Editor.ViewportHeight;
+        var fraction = range > 0 ? Math.Clamp(Editor.VerticalOffset / range, 0, 1) : 0;
+        try { _ = Preview.ExecuteScriptAsync("window.scrollTo(0,(document.documentElement.scrollHeight-innerHeight)*" + fraction.ToString(System.Globalization.CultureInfo.InvariantCulture) + ")"); } catch { }
+    }
+    private Window Dialog(string title, StackPanel panel) => new() { Title = title, Owner = this, Content = panel, SizeToContent = SizeToContent.WidthAndHeight, WindowStartupLocation = WindowStartupLocation.CenterOwner, ResizeMode = ResizeMode.NoResize, Background = (Brush)Resources["Panel"], Foreground = (Brush)Resources["Ink"] };
+    private void InsertImage()
+    {
+        var panel = new StackPanel { Margin = new Thickness(16), Width = 360 };
+        var alt = new TextBox { Text = Editor.SelectedText, Margin = new Thickness(0,4,0,8) };
+        var url = new TextBox { Margin = new Thickness(0,4,0,8) };
+        panel.Children.Add(new TextBlock { Text = "Texto alternativo" }); panel.Children.Add(alt);
+        panel.Children.Add(new TextBlock { Text = "URL o ruta de imagen" }); panel.Children.Add(url);
+        var browse = new Button { Content = "Elegir del dispositivo…" }; panel.Children.Add(browse);
+        var ok = new Button { Content = "Insertar", IsDefault = true }; panel.Children.Add(ok);
+        var dialog = Dialog("Insertar imagen", panel);
+        browse.Click += (_, _) => { var picker = new OpenFileDialog { Filter = "Imágenes|*.png;*.jpg;*.jpeg;*.gif;*.webp;*.bmp" }; if (picker.ShowDialog(dialog) == true) url.Text = picker.FileName; };
+        ok.Click += (_, _) => { if (!string.IsNullOrWhiteSpace(url.Text)) dialog.DialogResult = true; };
+        if (dialog.ShowDialog() != true) return;
+        var path = url.Text.Trim();
+        if (File.Exists(path)) path = filePath is null ? new Uri(Path.GetFullPath(path)).AbsoluteUri : Path.GetRelativePath(Path.GetDirectoryName(Path.GetFullPath(filePath))!, Path.GetFullPath(path)).Replace('\\','/');
+        InsertText("![" + alt.Text.Replace("]", "\\]") + "](<" + path.Replace(">", "%3E") + ">)");
+    }
+    private void InsertText(string value) { int offset = Editor.SelectionStart; Editor.Document.Replace(offset, Editor.SelectionLength, value); Editor.CaretOffset = offset + value.Length; Editor.Focus(); }
+    private void InsertTable()
+    {
+        var panel = new StackPanel { Margin = new Thickness(16) };
+        var label = new TextBlock { Text = "Elige columnas × filas (incluye encabezado)" }; panel.Children.Add(label);
+        var grid = new System.Windows.Controls.Primitives.UniformGrid { Columns = 8, Rows = 6 }; panel.Children.Add(grid);
+        var dialog = Dialog("Insertar tabla", panel);
+        var cells = new List<(Button Button,int Row,int Col)>();
+        for (int r=1;r<=6;r++) for(int c=1;c<=8;c++) {
+            int rr=r, cc=c; var b=new Button { Width=32, Height=32, Content="·", Margin=new Thickness(2) }; cells.Add((b,r,c)); grid.Children.Add(b);
+            b.MouseEnter += (_,_) => { label.Text=$"{cc} columnas × {rr} filas"; foreach(var cell in cells) cell.Button.Background=(Brush)Resources[cell.Row<=rr && cell.Col<=cc ? "Accent" : "Surface"]; };
+            b.Click += (_,_) => { dialog.Close(); var header="| "+string.Join(" | ",Enumerable.Range(1,cc).Select(i=>$"Columna {i}"))+" |"; var divider="| "+string.Join(" | ",Enumerable.Repeat("---",cc))+" |"; var row="| "+string.Join(" | ",Enumerable.Repeat(" ",cc))+" |"; InsertText("\n"+header+"\n"+divider+"\n"+string.Concat(Enumerable.Repeat(row+"\n",rr-1))); };
+        }
+        dialog.ShowDialog();
+    }
+    private string EmbedLocalImages(string html)
+    {
+        return Regex.Replace(html, @"(<img\b[^>]*?\bsrc="")([^""]+)("")", m => {
+            try {
+                var src = WebUtility.HtmlDecode(m.Groups[2].Value);
+                string path;
+                if (Uri.TryCreate(src, UriKind.Absolute, out var uri)) { if (!uri.IsFile) return m.Value; path=uri.LocalPath; }
+                else { if (filePath is null) return m.Value; path=Path.Combine(Path.GetDirectoryName(Path.GetFullPath(filePath))!,Uri.UnescapeDataString(src)); }
+                var mime=Path.GetExtension(path).ToLowerInvariant() switch { ".png"=>"image/png", ".jpg" or ".jpeg"=>"image/jpeg", ".gif"=>"image/gif", ".webp"=>"image/webp", ".bmp"=>"image/bmp", _=>null };
+                if (mime is null || !File.Exists(path) || new FileInfo(path).Length>750000) return m.Value;
+                return m.Groups[1].Value+"data:"+mime+";base64,"+Convert.ToBase64String(File.ReadAllBytes(path))+m.Groups[3].Value;
+            } catch { return m.Value; }
+        }, RegexOptions.IgnoreCase);
     }
 
     private void Open_Click(object sender, RoutedEventArgs e) => OpenFile();
