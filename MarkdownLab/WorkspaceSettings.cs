@@ -9,6 +9,8 @@ public partial class MainWindow
     private sealed class Preferences
     {
         public bool AutoSave {get;set;}
+        public bool Light {get;set;}
+        public double Zoom {get;set;}=1;
         public bool Recovery {get;set;}=true;
         public bool RestoreTabs {get;set;}=true;
         public int Interval {get;set;}=30;
@@ -19,6 +21,7 @@ public partial class MainWindow
     {
         try {settings=JsonSerializer.Deserialize<Preferences>(File.ReadAllText(Path.Combine(WorkspaceFolder,"settings.json")))??new();}catch{}
         workspaceTimer.Interval=TimeSpan.FromSeconds(Math.Clamp(settings.Interval,15,300));
+        Loaded += (_,_)=>{light=settings.Light;zoom=Math.Clamp(settings.Zoom,.6,2.5);Editor.FontSize=15*zoom;ApplyTheme();};
     }
     private void Settings_Click(object sender,RoutedEventArgs e)
     {

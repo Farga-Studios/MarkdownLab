@@ -138,7 +138,7 @@ public partial class MainWindow : Window
         var markdown = Editor.Text;
         DocumentName.Text = (filePath is null ? "Sin título" : Path.GetFileName(filePath)) + (dirty ? " *" : "");
         Stats.Text = $"{Regex.Matches(markdown, @"\S+").Count} palabras   ·   {markdown.Length} caracteres   ·   UTF-8   ·   {zoom:P0}";
-        var html = EmbedLocalImages(Markdown.ToHtml(markdown, pipeline));
+        var html = HighlightCode(EmbedLocalImages(Markdown.ToHtml(markdown, pipeline)));
         headings.Clear();
         // Explicit anchors make the outline work even with duplicate heading titles.
         var number = 0;
@@ -155,7 +155,8 @@ public partial class MainWindow : Window
         var css = light
             ? "body{background:#fff;color:#252936}pre,code{background:#f0f2f5}blockquote{border-color:#bbc4d1}"
             : "body{background:#1d202a;color:#e3e8f5}pre,code{background:#292e3b}blockquote{border-color:#58627b}a{color:#82bbff}";
-        var document = $@"<!doctype html><html><head><meta http-equiv=""X-UA-Compatible"" content=""IE=edge""/><meta charset=""utf-8""/>{baseHref}<style>body{{font-family:Segoe UI,Arial,sans-serif;font-size:{Math.Round(16 * zoom)}px;line-height:1.65;margin:32px auto;padding:0 32px;max-width:900px;overflow-wrap:break-word}}img{{max-width:100%}}pre{{padding:12px;overflow:auto}}code{{padding:2px 4px}}table{{border-collapse:collapse;max-width:100%}}td,th{{border:1px solid #8791a3;padding:7px}}blockquote{{border-left:4px solid;padding-left:15px;margin-left:0}}hr{{opacity:.25}}{css}</style></head><body>{html}</body></html>";
+        var document = $@"<!doctype html><html><head><meta http-equiv=""X-UA-Compatible"" content=""IE=edge""/><meta charset=""utf-8""/>{baseHref}<style>body{{font-family:Segoe UI,Arial,sans-serif;font-size:{Math.Round(16 * zoom)}px;line-height:1.65;margin:32px auto;padding:0 32px;max-width:900px;overflow-wrap:break-word}}img{{max-width:100%}}pre{{padding:12px;overflow:auto}}code{{padding:2px 4px}}table{{border-collapse:collapse;max-width:100%}}td,th{{border:1px solid #8791a3;padding:7px}}blockquote{{border-left:4px solid;padding-left:15px;margin-left:0}}hr{{opacity:.25}} .kw{{color:#6688df;font-weight:600}} .str{{color:#329b75}} .comment{{color:#8593a8;font-style:italic}}{css}</style></head><body>{html}</body></html>";
+        lastHtml = document;
         if (ready) {
             try { Preview.NavigateToString(document); }
             catch (Exception ex) { StatusText.Text = "Error de vista previa: " + ex.Message; }
@@ -214,12 +215,15 @@ public partial class MainWindow : Window
 
     private void Theme_Click(object sender, RoutedEventArgs e)
     {
-        light = !light;
+        light = !light; ApplyTheme(); PersistAppearance();
+    }
+    private void ApplyTheme()
+    {
         foreach (var (key, dark, bright) in new[] { ("Surface","#181B22","#FFFFFF"), ("Panel","#222630","#F0F3F8"), ("Ink","#E6EAF2","#202734"), ("Muted","#A4AFC1","#536175"), ("Edge","#383F4D","#CDD5E0"), ("Accent","#42669D","#A8C8F2") })
             Resources[key] = new SolidColorBrush((Color)ColorConverter.ConvertFromString(light ? bright : dark));
         ApplyMode(); RefreshPreview();
     }
-    private void ZoomIn_Click(object sender, RoutedEventArgs e) { zoom = Math.Min(2.5, zoom + .1); Editor.FontSize = 15 * zoom; RefreshPreview(); }
+    private void ZoomIn_Click(object sender, RoutedEventArgs e) { zoom = Math.Min(2.5, zoom + .1); Editor.FontSize = 15 * zoom; RefreshPreview(); PersistAppearance(); }
     private void ZoomOut_Click(object sender, RoutedEventArgs e) { zoom = Math.Max(.6, zoom - .1); Editor.FontSize = 15 * zoom; RefreshPreview(); }
     private void New_Click(object sender, RoutedEventArgs e) {
         AddDocument(null, "", false, ViewMode.Edit); Editor.Focus();

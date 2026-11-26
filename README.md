@@ -75,3 +75,7 @@ Restore NavigateToString preview; serve local raster images through a dedicated 
 ## 1.4.2
 
 Save/discard/cancel prompts, save all, individual tab close, new tab button, atomic file replacement, configurable recovery and opt-in autosave, session restoration. Autosave only affects named documents.
+
+## 1.5.0
+
+Custom vector toolbar icons (project-owned geometry), themed menus and selection, HTML/PDF export, Spanish spelling review dialog, basic language-aware code highlighting, focus mode, persistent theme and zoom. No new third-party dependencies.
