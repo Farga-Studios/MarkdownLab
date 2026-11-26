@@ -297,6 +297,22 @@ public partial class MainWindow : Window
         UpdateListButtons();
     }
 
+    private void About_Click(object sender, RoutedEventArgs e)
+    {
+        var version = typeof(MainWindow).Assembly.GetName().Version?.ToString(3) ?? "Desconocida";
+        var panel = new StackPanel { Margin = new Thickness(24), Width = 340 };
+        panel.Children.Add(new Image { Source = Icon, Width = 64, Height = 64 });
+        panel.Children.Add(new TextBlock { Text = "MarkdownLab", FontSize = 26, FontWeight = FontWeights.SemiBold, TextAlignment = TextAlignment.Center, Margin = new Thickness(0,12,0,4) });
+        panel.Children.Add(new TextBlock { Text = $"Versión {version}\nDesarrollado por Sealsworn\nLicencia MIT\nLector y editor Markdown para Windows", TextAlignment = TextAlignment.Center, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0,4,0,16) });
+        var link = new Button { Content = "Repositorio oficial · GitHub" };
+        panel.Children.Add(link);
+        var close = new Button { Content = "Cerrar", IsCancel = true, IsDefault = true };
+        panel.Children.Add(close);
+        var dialog = Dialog("Acerca de MarkdownLab", panel);
+        link.Click += (_, _) => { try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("https://github.com/Sealsworn/MarkdownLab") { UseShellExecute = true }); } catch (Exception ex) { MessageBox.Show(dialog, ex.Message); } };
+        dialog.ShowDialog();
+    }
+
     private void Exit_Click(object sender, RoutedEventArgs e) => Close();
     private void CloseSearch_Click(object sender, RoutedEventArgs e) { SearchBar.Visibility = Visibility.Collapsed; Editor.Focus(); }
     private void Wrap_Click(object sender, RoutedEventArgs e) => Editor.WordWrap = !Editor.WordWrap;

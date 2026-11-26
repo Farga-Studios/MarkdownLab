@@ -46,7 +46,7 @@ Only open Markdown files from sources you trust. The preview uses Microsoft Edge
 
 ## License
 
-MIT.
+[MIT](LICENSE). Developed by Sealsworn.
 
 ## Version 1.1
 
@@ -59,3 +59,7 @@ Save As (Ctrl+Shift+S), editor context menu, Ctrl+F, and Markdown formatting too
 ## 1.3.0
 
 Desktop menus, heading selector, smart lists, image picker (URL or local), visual table picker, Ctrl+B/I, Alt+Up/Down, word wrap, collapsible search, approximate editor-to-preview scroll sync. Local raster preview embeds images up to 750 KB each; WebView2 HTML size limits still apply.
+
+## 1.3.1
+
+About dialog with automatic assembly version, organization, license and repository link.
