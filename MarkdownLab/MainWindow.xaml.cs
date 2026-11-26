@@ -41,7 +41,14 @@ public partial class MainWindow : Window
                 await Preview.EnsureCoreWebView2Async(env);
                 Preview.CoreWebView2.Settings.AreDevToolsEnabled = false;
                 Preview.CoreWebView2.Settings.IsWebMessageEnabled = false;
-                Preview.CoreWebView2.NavigationStarting += (_, e) => { if (e.Uri != "about:blank") e.Cancel = true; };
+                Preview.CoreWebView2.NavigationStarting += (_, e) => { if (e.Uri.StartsWith("about:blank", StringComparison.OrdinalIgnoreCase) || e.Uri.StartsWith("data:text/html", StringComparison.OrdinalIgnoreCase)) return;
+                    e.Cancel = true;
+                    if (e.IsUserInitiated && Uri.TryCreate(e.Uri, UriKind.Absolute, out var link) && link.Scheme is "https" or "http")
+                        try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(link.AbsoluteUri) { UseShellExecute = true }); } catch { } };
+                Preview.CoreWebView2.NavigationCompleted += (_, e) => {
+                    if (!e.IsSuccess && e.WebErrorStatus != Microsoft.Web.WebView2.Core.CoreWebView2WebErrorStatus.OperationCanceled)
+                        StatusText.Text = "Error de vista previa: " + e.WebErrorStatus;
+                };
                 Preview.CoreWebView2.NewWindowRequested += (_, e) => { e.Handled = true; };
                 ready = true; RefreshPreview();
             } catch (Exception ex) { StatusText.Text = "Vista previa no disponible: " + ex.Message; mode = ViewMode.Edit; ApplyMode(); }
@@ -126,7 +133,10 @@ public partial class MainWindow : Window
             ? "body{background:#fff;color:#252936}pre,code{background:#f0f2f5}blockquote{border-color:#bbc4d1}"
             : "body{background:#1d202a;color:#e3e8f5}pre,code{background:#292e3b}blockquote{border-color:#58627b}a{color:#82bbff}";
         var document = $@"<!doctype html><html><head><meta http-equiv=""X-UA-Compatible"" content=""IE=edge""/><meta charset=""utf-8""/>{baseHref}<style>body{{font-family:Segoe UI,Arial,sans-serif;font-size:{Math.Round(16 * zoom)}px;line-height:1.65;margin:32px auto;padding:0 32px;max-width:900px;overflow-wrap:break-word}}img{{max-width:100%}}pre{{padding:12px;overflow:auto}}code{{padding:2px 4px}}table{{border-collapse:collapse;max-width:100%}}td,th{{border:1px solid #8791a3;padding:7px}}blockquote{{border-left:4px solid;padding-left:15px;margin-left:0}}hr{{opacity:.25}}{css}</style></head><body>{html}</body></html>";
-        if (ready) Preview.NavigateToString(document);
+        if (ready) {
+            try { Preview.NavigateToString(document); }
+            catch (Exception ex) { StatusText.Text = "Error de vista previa: " + ex.Message; }
+        }
     }
 
     private void ApplyMode()
