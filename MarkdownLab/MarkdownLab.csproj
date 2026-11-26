@@ -7,7 +7,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationIcon>Assets/MarkdownLab.ico</ApplicationIcon>
     <AssemblyName>MarkdownLab</AssemblyName>
-    <Version>1.1.1</Version>
+    <Version>1.2.0</Version>
   </PropertyGroup>
   <ItemGroup>
     <Resource Include="Assets/MarkdownLab.ico" />

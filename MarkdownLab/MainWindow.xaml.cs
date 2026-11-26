@@ -57,6 +57,10 @@ public partial class MainWindow : Window
         CommandBindings.Add(new CommandBinding(ApplicationCommands.Save, (_, _) => SaveFile()));
         InputBindings.Add(new KeyBinding(ApplicationCommands.Open, Key.O, ModifierKeys.Control));
         InputBindings.Add(new KeyBinding(ApplicationCommands.Save, Key.S, ModifierKeys.Control));
+        PreviewKeyDown += (_, e) => {
+            if (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift) && e.Key == Key.S) { e.Handled = true; SaveFile(true); }
+            else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.F) { e.Handled = true; FocusSearch(); }
+        };
         if (Environment.GetCommandLineArgs().Skip(1).FirstOrDefault(p => File.Exists(p) && p.EndsWith(".md", StringComparison.OrdinalIgnoreCase)) is { } first) LoadFile(first);
     }
 
@@ -90,12 +94,12 @@ public partial class MainWindow : Window
         finally { updating = false; }
     }
 
-    private bool SaveFile()
+    private bool SaveFile(bool saveAs = false)
     {
         var path = filePath;
-        if (path is null)
+        if (path is null || saveAs)
         {
-            var dialog = new SaveFileDialog { Filter = "Markdown (*.md)|*.md", DefaultExt = ".md" };
+            var dialog = new SaveFileDialog { Filter = "Markdown (*.md)|*.md", DefaultExt = ".md", FileName = path is null ? "documento.md" : Path.GetFileName(path), InitialDirectory = path is null ? "" : Path.GetDirectoryName(path) };
             if (dialog.ShowDialog() != true) return false;
             path = dialog.FileName;
         }
@@ -141,6 +145,7 @@ public partial class MainWindow : Window
 
     private void ApplyMode()
     {
+        FormatBar.Visibility = started && mode != ViewMode.Read ? Visibility.Visible : Visibility.Collapsed;
         Welcome.Visibility = started ? Visibility.Collapsed : Visibility.Visible;
         Editor.Visibility = !started || mode == ViewMode.Read ? Visibility.Collapsed : Visibility.Visible;
         ReadButton.Background = (Brush)Resources[mode == ViewMode.Read ? "Accent" : "Panel"];
@@ -206,6 +211,70 @@ public partial class MainWindow : Window
         OutlineColumn.Width = new GridLength(outlineVisible ? 230 : 0);
         OutlineSplitter.Visibility = outlineVisible ? Visibility.Visible : Visibility.Collapsed;
     }
+    private void SaveAs_Click(object sender, RoutedEventArgs e) => SaveFile(true);
+    private void FocusSearch() { SearchBox.Focus(); SearchBox.SelectAll(); }
+    private void EditorMenu_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not MenuItem item) return;
+        Editor.Focus();
+        switch (item.Tag as string)
+        {
+            case "undo": Editor.Undo(); break;
+            case "redo": Editor.Redo(); break;
+            case "cut": Editor.Cut(); break;
+            case "copy": Editor.Copy(); break;
+            case "paste": Editor.Paste(); break;
+            case "all": Editor.SelectAll(); break;
+            case "find": if (Editor.SelectionLength > 0) SearchBox.Text = Editor.SelectedText; FocusSearch(); break;
+            case "word":
+                var text = Editor.Text;
+                int a = Editor.CaretOffset, b = a;
+                while (a > 0 && !char.IsWhiteSpace(text[a - 1])) a--;
+                while (b < text.Length && !char.IsWhiteSpace(text[b])) b++;
+                Editor.Select(a, b - a); break;
+        }
+    }
+
+    private void Format_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button button || button.Tag is not string tag) return;
+        var selected = Editor.SelectedText;
+        var offset = Editor.SelectionStart;
+        var length = Editor.SelectionLength;
+        var text = selected.Length == 0 ? "texto" : selected;
+        string replacement;
+        int selectStart = 0, selectLength = 0;
+        string? prefix = tag switch {
+            "h1" => "# ", "h2" => "## ", "h3" => "### ", "h4" => "#### ", "h5" => "##### ", "h6" => "###### ",
+            "bullet" => "- ", "number" => "1. ", "task" => "- [ ] ", "quote" => "> ", _ => null
+        };
+        if (prefix is not null)
+        {
+            var first = Editor.Document.GetLineByOffset(offset);
+            var last = Editor.Document.GetLineByOffset(offset + Math.Max(0, length - 1));
+            offset = first.Offset; length = last.EndOffset - offset;
+            var lines = Editor.Document.GetText(offset, length).Replace("\r\n", "\n").Split('\n');
+            replacement = string.Join(Environment.NewLine, lines.Select((line, i) =>
+                (tag == "number" ? $"{i + 1}. " : prefix) + (tag.StartsWith("h") ? Regex.Replace(line, @"^#{1,6}\s+", "") : line)));
+            selectStart = prefix.Length; selectLength = replacement.Length - selectStart;
+        }
+        else
+        {
+            (string before, string after) = tag switch {
+                "bold" => ("**", "**"), "italic" => ("*", "*"), "strike" => ("~~", "~~"),
+                "code" => ("\x60", "\x60"), "fence" => ("\n\x60\x60\x60\n", "\n\x60\x60\x60\n"),
+                "link" => ("[", "](https://example.com)"), "image" => ("![", "](imagen.png)"), _ => ("", "")
+            };
+            if (tag == "table") replacement = "\n| Columna 1 | Columna 2 |\n| --- | --- |\n| Texto | Texto |\n";
+            else if (tag == "rule") replacement = "\n---\n";
+            else { replacement = before + text + after; selectStart = before.Length; selectLength = text.Length; }
+        }
+        Editor.Document.Replace(offset, length, replacement);
+        Editor.Focus();
+        Editor.Select(offset + selectStart, selectLength);
+        if (selectLength == 0) Editor.CaretOffset = offset + replacement.Length;
+    }
+
     private void Open_Click(object sender, RoutedEventArgs e) => OpenFile();
     private void Save_Click(object sender, RoutedEventArgs e) => SaveFile();
     private void Read_Click(object sender, RoutedEventArgs e) { mode = ViewMode.Read; ApplyMode(); }

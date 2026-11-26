@@ -51,3 +51,7 @@ MIT.
 ## Version 1.1
 
 Modern toolbar, welcome screen, resizable outline, AvalonEdit line numbers, document statistics and application icon.
+
+## Version 1.2
+
+Save As (Ctrl+Shift+S), editor context menu, Ctrl+F, and Markdown formatting toolbar with syntax tooltips in edit and split modes.
