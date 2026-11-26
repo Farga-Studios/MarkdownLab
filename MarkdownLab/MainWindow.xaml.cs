@@ -34,6 +34,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        InitWorkspace();
         Editor.TextArea.Caret.PositionChanged += (_, _) => UpdateListButtons();
         Editor.TextArea.TextView.ScrollOffsetChanged += (_, _) => SyncPreview();
         Editor.PreviewKeyDown += EditorKeys;
@@ -48,7 +49,7 @@ public partial class MainWindow : Window
                 await Preview.EnsureCoreWebView2Async(env);
                 Preview.CoreWebView2.Settings.AreDevToolsEnabled = false;
                 Preview.CoreWebView2.Settings.IsWebMessageEnabled = false;
-                Preview.CoreWebView2.NavigationStarting += (_, e) => { if (e.Uri.StartsWith("about:blank", StringComparison.OrdinalIgnoreCase) || e.Uri.StartsWith("data:text/html", StringComparison.OrdinalIgnoreCase)) return;
+                Preview.CoreWebView2.NavigationStarting += (_, e) => { if (e.Uri == new Uri(Path.Combine(WorkspaceFolder,"preview.html")).AbsoluteUri || e.Uri.StartsWith("about:blank", StringComparison.OrdinalIgnoreCase) || e.Uri.StartsWith("data:text/html", StringComparison.OrdinalIgnoreCase)) return;
                     e.Cancel = true;
                     if (e.IsUserInitiated && Uri.TryCreate(e.Uri, UriKind.Absolute, out var link) && link.Scheme is "https" or "http")
                         try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(link.AbsoluteUri) { UseShellExecute = true }); } catch { } };
@@ -80,7 +81,6 @@ public partial class MainWindow : Window
 
     private void OpenFile()
     {
-        if (!ConfirmDiscard()) return;
         var dialog = new OpenFileDialog { Filter = "Markdown (*.md;*.markdown)|*.md;*.markdown|Todos los archivos (*.*)|*.*" };
         if (dialog.ShowDialog() == true) LoadFile(dialog.FileName);
     }
@@ -89,8 +89,16 @@ public partial class MainWindow : Window
     {
         try
         {
+            path = Path.GetFullPath(path);
+            var existing = documents.FirstOrDefault(d => string.Equals(d.Path,path,StringComparison.OrdinalIgnoreCase));
+            if (existing != null) { Tabs.SelectedItem = existing; return; }
+            var content = File.ReadAllText(path);
+            AddDocument(path, content, false, ViewMode.Read);
+            Remember(path);
+            return;
+#pragma warning disable CS0162
             updating = true;
-            Editor.Text = File.ReadAllText(path);
+            Editor.Text = content;
             filePath = path;
             started = true; mode = ViewMode.Read; ApplyMode();
             dirty = false;
@@ -100,6 +108,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex) { MessageBox.Show(ex.Message, "No se pudo abrir", MessageBoxButton.OK, MessageBoxImage.Error); }
         finally { updating = false; }
+#pragma warning restore CS0162
     }
 
     private bool SaveFile(bool saveAs = false)
@@ -114,7 +123,7 @@ public partial class MainWindow : Window
         try
         {
             File.WriteAllText(path, Editor.Text, new UTF8Encoding(false));
-            filePath = path; dirty = false; RefreshPreview();
+            filePath = path; dirty = false; CaptureTab(); Remember(path); RefreshPreview();
             Title = $"MarkdownLab — {Path.GetFileName(path)}";
             StatusText.Text = path;
             return true;
@@ -146,7 +155,7 @@ public partial class MainWindow : Window
             : "body{background:#1d202a;color:#e3e8f5}pre,code{background:#292e3b}blockquote{border-color:#58627b}a{color:#82bbff}";
         var document = $@"<!doctype html><html><head><meta http-equiv=""X-UA-Compatible"" content=""IE=edge""/><meta charset=""utf-8""/>{baseHref}<style>body{{font-family:Segoe UI,Arial,sans-serif;font-size:{Math.Round(16 * zoom)}px;line-height:1.65;margin:32px auto;padding:0 32px;max-width:900px;overflow-wrap:break-word}}img{{max-width:100%}}pre{{padding:12px;overflow:auto}}code{{padding:2px 4px}}table{{border-collapse:collapse;max-width:100%}}td,th{{border:1px solid #8791a3;padding:7px}}blockquote{{border-left:4px solid;padding-left:15px;margin-left:0}}hr{{opacity:.25}}{css}</style></head><body>{html}</body></html>";
         if (ready) {
-            try { Preview.NavigateToString(document); }
+            try { var previewPath = Path.Combine(WorkspaceFolder, "preview.html"); File.WriteAllText(previewPath, document); Preview.Source = new Uri(previewPath); }
             catch (Exception ex) { StatusText.Text = "Error de vista previa: " + ex.Message; }
         }
     }
@@ -168,6 +177,7 @@ public partial class MainWindow : Window
     {
         if (updating || !IsInitialized) return;
         dirty = true;
+        CaptureTab();
         Title = $"MarkdownLab — {(filePath is null ? "Sin título" : Path.GetFileName(filePath))} *";
         refreshTimer.Stop(); refreshTimer.Start();
     }
@@ -210,9 +220,7 @@ public partial class MainWindow : Window
     private void ZoomIn_Click(object sender, RoutedEventArgs e) { zoom = Math.Min(2.5, zoom + .1); Editor.FontSize = 15 * zoom; RefreshPreview(); }
     private void ZoomOut_Click(object sender, RoutedEventArgs e) { zoom = Math.Max(.6, zoom - .1); Editor.FontSize = 15 * zoom; RefreshPreview(); }
     private void New_Click(object sender, RoutedEventArgs e) {
-        if (!ConfirmDiscard()) return;
-        updating = true; Editor.Text = ""; updating = false; filePath = null; dirty = false; started = true; mode = ViewMode.Edit;
-        Title = "MarkdownLab — Sin título"; StatusText.Text = "Nuevo documento"; ApplyMode(); RefreshPreview(); Editor.Focus();
+        AddDocument(null, "", false, ViewMode.Edit); Editor.Focus();
     }
     private void ToggleOutline_Click(object sender, RoutedEventArgs e) {
         outlineVisible = !outlineVisible;
@@ -393,7 +401,7 @@ public partial class MainWindow : Window
         ok.Click += (_, _) => { if (!string.IsNullOrWhiteSpace(url.Text)) dialog.DialogResult = true; };
         if (dialog.ShowDialog() != true) return;
         var path = url.Text.Trim();
-        if (File.Exists(path)) path = filePath is null ? new Uri(Path.GetFullPath(path)).AbsoluteUri : Path.GetRelativePath(Path.GetDirectoryName(Path.GetFullPath(filePath))!, Path.GetFullPath(path)).Replace('\\','/');
+        if (File.Exists(path)) { InsertText(ImageMarkdown(path,alt.Text)); return; }
         InsertText("![" + alt.Text.Replace("]", "\\]") + "](<" + path.Replace(">", "%3E") + ">)");
     }
     private void InsertText(string value) { int offset = Editor.SelectionStart; Editor.Document.Replace(offset, Editor.SelectionLength, value); Editor.CaretOffset = offset + value.Length; Editor.Focus(); }
@@ -420,7 +428,7 @@ public partial class MainWindow : Window
                 if (Uri.TryCreate(src, UriKind.Absolute, out var uri)) { if (!uri.IsFile) return m.Value; path=uri.LocalPath; }
                 else { if (filePath is null) return m.Value; path=Path.Combine(Path.GetDirectoryName(Path.GetFullPath(filePath))!,Uri.UnescapeDataString(src)); }
                 var mime=Path.GetExtension(path).ToLowerInvariant() switch { ".png"=>"image/png", ".jpg" or ".jpeg"=>"image/jpeg", ".gif"=>"image/gif", ".webp"=>"image/webp", ".bmp"=>"image/bmp", _=>null };
-                if (mime is null || !File.Exists(path) || new FileInfo(path).Length>750000) return m.Value;
+                if (mime is null || !File.Exists(path)) return m.Value;
                 return m.Groups[1].Value+"data:"+mime+";base64,"+Convert.ToBase64String(File.ReadAllBytes(path))+m.Groups[3].Value;
             } catch { return m.Value; }
         }, RegexOptions.IgnoreCase);
@@ -436,7 +444,8 @@ public partial class MainWindow : Window
     private void Window_DragOver(object sender, DragEventArgs e) { e.Effects = e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.Copy : DragDropEffects.None; e.Handled = true; }
     private void Window_Drop(object sender, DragEventArgs e)
     {
-        if (e.Data.GetData(DataFormats.FileDrop) is string[] paths && paths.FirstOrDefault(p => File.Exists(p) && (p.EndsWith(".md", StringComparison.OrdinalIgnoreCase) || p.EndsWith(".markdown", StringComparison.OrdinalIgnoreCase))) is { } path && ConfirmDiscard()) LoadFile(path);
+        if (e.Data.GetData(DataFormats.FileDrop) is string[] paths && paths.FirstOrDefault(p => File.Exists(p) && (p.EndsWith(".md", StringComparison.OrdinalIgnoreCase) || p.EndsWith(".markdown", StringComparison.OrdinalIgnoreCase))) is { } path ) LoadFile(path);
+        else if (e.Data.GetData(DataFormats.FileDrop) is string[] images && images.Any(IsImage)) { if (!started) AddDocument(null,"",false,ViewMode.Edit); mode=ViewMode.Edit; ApplyMode(); foreach(var image in images.Where(IsImage)) InsertText("\n"+ImageMarkdown(image,Path.GetFileNameWithoutExtension(image))+"\n"); e.Handled=true; }
     }
-    protected override void OnClosing(System.ComponentModel.CancelEventArgs e) { if (!ConfirmDiscard()) e.Cancel = true; base.OnClosing(e); }
+    protected override void OnClosing(System.ComponentModel.CancelEventArgs e) { CaptureTab(); if (documents.Any(d=>d.Dirty) && MessageBox.Show("Hay documentos sin guardar. ¿Cerrar y conservar copias de recuperación?", "MarkdownLab", MessageBoxButton.YesNo) != MessageBoxResult.Yes) e.Cancel=true; if (!e.Cancel) WriteRecovery(); base.OnClosing(e); }
 }

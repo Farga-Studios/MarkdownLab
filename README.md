@@ -63,3 +63,7 @@ Desktop menus, heading selector, smart lists, image picker (URL or local), visua
 ## 1.3.1
 
 About dialog with automatic assembly version, organization, license and repository link.
+
+## 1.4.0
+
+Document tabs, recent files, folder browsing, recovery snapshots, replace all, image drag/drop and file-based preview. Recovery snapshots every 15 seconds; original files are not overwritten automatically.
