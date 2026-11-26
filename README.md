@@ -71,3 +71,7 @@ Document tabs, recent files, folder browsing, recovery snapshots, replace all, i
 ## 1.4.1
 
 Restore NavigateToString preview; serve local raster images through a dedicated WebView2 virtual host and local image cache.
+
+## 1.4.2
+
+Save/discard/cancel prompts, save all, individual tab close, new tab button, atomic file replacement, configurable recovery and opt-in autosave, session restoration. Autosave only affects named documents.

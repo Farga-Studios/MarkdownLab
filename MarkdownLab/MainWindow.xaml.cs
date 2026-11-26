@@ -124,8 +124,8 @@ public partial class MainWindow : Window
         }
         try
         {
-            File.WriteAllText(path, Editor.Text, new UTF8Encoding(false));
-            filePath = path; dirty = false; CaptureTab(); Remember(path); RefreshPreview();
+            WriteDocumentSafely(path, Editor.Text);
+            filePath = path; dirty = false; CaptureTab(); Remember(path); WriteRecovery(); RefreshPreview();
             Title = $"MarkdownLab — {Path.GetFileName(path)}";
             StatusText.Text = path;
             return true;
@@ -449,5 +449,5 @@ public partial class MainWindow : Window
         if (e.Data.GetData(DataFormats.FileDrop) is string[] paths && paths.FirstOrDefault(p => File.Exists(p) && (p.EndsWith(".md", StringComparison.OrdinalIgnoreCase) || p.EndsWith(".markdown", StringComparison.OrdinalIgnoreCase))) is { } path ) LoadFile(path);
         else if (e.Data.GetData(DataFormats.FileDrop) is string[] images && images.Any(IsImage)) { if (!started) AddDocument(null,"",false,ViewMode.Edit); mode=ViewMode.Edit; ApplyMode(); foreach(var image in images.Where(IsImage)) InsertText("\n"+ImageMarkdown(image,Path.GetFileNameWithoutExtension(image))+"\n"); e.Handled=true; }
     }
-    protected override void OnClosing(System.ComponentModel.CancelEventArgs e) { CaptureTab(); if (documents.Any(d=>d.Dirty) && MessageBox.Show("Hay documentos sin guardar. ¿Cerrar y conservar copias de recuperación?", "MarkdownLab", MessageBoxButton.YesNo) != MessageBoxResult.Yes) e.Cancel=true; if (!e.Cancel) WriteRecovery(); base.OnClosing(e); }
+    protected override void OnClosing(System.ComponentModel.CancelEventArgs e) { e.Cancel = !ConfirmExit(); base.OnClosing(e); }
 }

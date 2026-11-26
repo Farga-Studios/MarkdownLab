@@ -32,13 +32,14 @@ public partial class MainWindow
         Tabs.ItemsSource=documents;
         try { recent.AddRange(JsonSerializer.Deserialize<List<string>>(File.ReadAllText(Path.Combine(WorkspaceFolder,"recent.json"))) ?? new()); } catch {}
         UpdateRecent();
-        var timer=new System.Windows.Threading.DispatcherTimer {Interval=TimeSpan.FromSeconds(15)};
-        timer.Tick += (_,_)=>WriteRecovery(); timer.Start();
+        LoadSettings();
+        workspaceTimer.Tick += (_,_)=>WorkspaceTick(); workspaceTimer.Start();
         Loaded += (_,_)=> {
             try {
+                if (settings.RestoreTabs) RestoreSession();
                 var recovered=JsonSerializer.Deserialize<List<TabDoc>>(File.ReadAllText(Path.Combine(WorkspaceFolder,"recovery.json")));
                 if(recovered?.Count>0 && MessageBox.Show("¿Recuperar documentos sin guardar?","MarkdownLab",MessageBoxButton.YesNo)==MessageBoxResult.Yes)
-                    foreach(var d in recovered) AddDocument(d.Path,d.Text,true,(ViewMode)d.Mode);
+                    foreach(var d in recovered) { var existing=documents.FirstOrDefault(t=>d.Path!=null && string.Equals(t.Path,d.Path,StringComparison.OrdinalIgnoreCase)); if(existing!=null){Tabs.SelectedItem=existing; Editor.Text=d.Text; dirty=true; CaptureTab();} else AddDocument(d.Path,d.Text,true,(ViewMode)d.Mode); }
             } catch {}
         };
         PreviewKeyDown += (_,e)=> {
@@ -73,7 +74,7 @@ public partial class MainWindow
     private void CloseTab_Click(object sender,RoutedEventArgs e)
     {
         CaptureTab();var d=current;if(d is null)return;
-        if(d.Dirty){var result=MessageBox.Show("¿Guardar cambios antes de cerrar?","MarkdownLab",MessageBoxButton.YesNoCancel);if(result==MessageBoxResult.Cancel || (result==MessageBoxResult.Yes && !SaveFile()))return;}
+        if(d.Dirty){var result=AskSave(d.Label,false);if(result==0 || (result==1 && !SaveFile()))return;}
         int index=documents.IndexOf(d);switching=true;documents.Remove(d);current=null;switching=false;
         if(documents.Count>0){Tabs.SelectedIndex=-1;Tabs.SelectedIndex=Math.Min(index,documents.Count-1);}
         else {updating=true;Editor.Document=new TextDocument();updating=false;started=false;dirty=false;filePath=null;ApplyMode();RefreshPreview();Title="MarkdownLab";}
@@ -81,7 +82,7 @@ public partial class MainWindow
     }
     private void Remember(string path){recent.RemoveAll(p=>string.Equals(p,path,StringComparison.OrdinalIgnoreCase));recent.Insert(0,path);if(recent.Count>15)recent.RemoveRange(15,recent.Count-15);try{File.WriteAllText(Path.Combine(WorkspaceFolder,"recent.json"),JsonSerializer.Serialize(recent));}catch{}UpdateRecent();}
     private void UpdateRecent(){RecentMenu.Items.Clear();foreach(var p in recent){var item=new MenuItem{Header=p};item.Click+=(_,_)=>LoadFile(p);RecentMenu.Items.Add(item);}}
-    private void WriteRecovery(){try{CaptureTab();var path=Path.Combine(WorkspaceFolder,"recovery.json");File.WriteAllText(path+".tmp",JsonSerializer.Serialize(documents.Where(d=>d.Dirty).ToList()));File.Move(path+".tmp",path,true);}catch{}}
+    private void WriteRecovery(){try{if(!settings.Recovery)return;CaptureTab();var path=Path.Combine(WorkspaceFolder,"recovery.json");File.WriteAllText(path+".tmp",JsonSerializer.Serialize(documents.Where(d=>d.Dirty).ToList()));File.Move(path+".tmp",path,true);}catch{}}
     private void Folder_Click(object sender,RoutedEventArgs e){var picker=new OpenFolderDialog();if(picker.ShowDialog()!=true)return;try{FolderFiles.ItemsSource=Directory.EnumerateFiles(picker.FolderName,"*",SearchOption.TopDirectoryOnly).Where(p=>p.EndsWith(".md",StringComparison.OrdinalIgnoreCase)||p.EndsWith(".markdown",StringComparison.OrdinalIgnoreCase)).OrderBy(p=>p).ToList();FolderFiles.Visibility=Visibility.Visible;}catch(Exception ex){StatusText.Text=ex.Message;}}
     private void FolderFile_Click(object sender,MouseButtonEventArgs e){if(FolderFiles.SelectedItem is string path)LoadFile(path);}
     private void Replace_Click(object sender,RoutedEventArgs e){if(!started)return;var panel=new StackPanel{Margin=new Thickness(16),Width=320};var find=new TextBox{Text=SearchBox.Text};var replace=new TextBox();panel.Children.Add(new TextBlock{Text="Buscar"});panel.Children.Add(find);panel.Children.Add(new TextBlock{Text="Reemplazar por"});panel.Children.Add(replace);var all=new Button{Content="Reemplazar todo"};panel.Children.Add(all);var dialog=Dialog("Buscar y reemplazar",panel);all.Click+=(_,_)=>{if(find.Text.Length==0)return;var value=Editor.Text.Replace(find.Text,replace.Text,StringComparison.OrdinalIgnoreCase);Editor.Document.Replace(0,Editor.Document.TextLength,value);dialog.Close();};dialog.ShowDialog();}
