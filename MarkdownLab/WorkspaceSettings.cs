@@ -9,6 +9,9 @@ public partial class MainWindow
     private sealed class Preferences
     {
         public bool AutoSave {get;set;}
+        public bool SpellEnabled {get;set;} = false;
+        public string SpellLanguage {get;set;} = "es-ES";
+        public bool Wrap {get;set;} = true;
         public bool Light {get;set;}
         public double Zoom {get;set;}=1;
         public bool Recovery {get;set;}=true;
@@ -21,23 +24,28 @@ public partial class MainWindow
     {
         try {settings=JsonSerializer.Deserialize<Preferences>(File.ReadAllText(Path.Combine(WorkspaceFolder,"settings.json")))??new();}catch{}
         workspaceTimer.Interval=TimeSpan.FromSeconds(Math.Clamp(settings.Interval,15,300));
-        Loaded += (_,_)=>{light=settings.Light;zoom=Math.Clamp(settings.Zoom,.6,2.5);Editor.FontSize=15*zoom;ApplyTheme();};
+        Loaded += (_,_)=>{light=settings.Light;zoom=Math.Clamp(settings.Zoom,.6,2.5);Editor.FontSize=15*zoom;Editor.WordWrap=settings.Wrap;SpellMenu.IsChecked=settings.SpellEnabled;ApplyTheme();QueueSpelling();};
     }
     private void Settings_Click(object sender,RoutedEventArgs e)
     {
-        var panel=new StackPanel{Margin=new Thickness(20),Width=380};
-        var auto=new CheckBox{Content="Guardar automáticamente archivos originales",IsChecked=settings.AutoSave};
-        var recovery=new CheckBox{Content="Crear copias de recuperación",IsChecked=settings.Recovery};
-        var restore=new CheckBox{Content="Restaurar pestañas al iniciar",IsChecked=settings.RestoreTabs};
-        var interval=new ComboBox{ItemsSource=new[]{15,30,60,300},SelectedItem=settings.Interval};
-        foreach(var check in new[]{auto,recovery,restore}){check.Foreground=(System.Windows.Media.Brush)Resources["Ink"];check.Margin=new Thickness(0,6,0,6);panel.Children.Add(check);}
-        panel.Children.Add(new TextBlock{Text="Intervalo (segundos)"});panel.Children.Add(interval);
+        var panel=new StackPanel{Margin=new Thickness(20),Width=490};
+        var tabs=new TabControl{Background=(System.Windows.Media.Brush)Resources["Panel"],Foreground=(System.Windows.Media.Brush)Resources["Ink"],BorderBrush=(System.Windows.Media.Brush)Resources["Edge"]};
+        panel.Children.Add(tabs);
+        StackPanel Page(string title){var p=new StackPanel{Margin=new Thickness(12)};tabs.Items.Add(new TabItem{Header=title,Content=p});return p;}
+        CheckBox Check(StackPanel p,string label,bool value){var c=new CheckBox{Content=label,IsChecked=value,Margin=new Thickness(0,7,0,7),Foreground=(System.Windows.Media.Brush)Resources["Ink"]};p.Children.Add(c);return c;}
+        var general=Page("General");var restore=Check(general,"Restaurar pestañas al iniciar",settings.RestoreTabs);
+        var appearance=Page("Apariencia");var bright=Check(appearance,"Tema claro",light);
+        var edit=Page("Editor");var wrap=Check(edit,"Ajustar líneas al ancho",Editor.WordWrap);var spell=Check(edit,"Corrector ortográfico integrado",settings.SpellEnabled);
+        edit.Children.Add(new TextBlock{Text="Idioma del corrector"});var language=new ComboBox{ItemsSource=new[]{"es-ES","en-US","en-GB","ca-ES"},SelectedItem=settings.SpellLanguage};edit.Children.Add(language);
+        var save=Page("Guardado");var auto=Check(save,"Guardar automáticamente archivos originales",settings.AutoSave);var recovery=Check(save,"Crear copias de recuperación",settings.Recovery);
+        save.Children.Add(new TextBlock{Text="Intervalo (segundos)"});var interval=new ComboBox{ItemsSource=new[]{15,30,60,300},SelectedItem=settings.Interval};save.Children.Add(interval);
         var ok=new Button{Content="Guardar configuración",IsDefault=true,Margin=new Thickness(0,12,0,0)};panel.Children.Add(ok);
         var dialog=Dialog("Configuración",panel);ok.Click+=(_,_)=>dialog.DialogResult=true;
         if(dialog.ShowDialog()!=true)return;
         settings.AutoSave=auto.IsChecked==true;settings.Recovery=recovery.IsChecked==true;settings.RestoreTabs=restore.IsChecked==true;settings.Interval=interval.SelectedItem is int n?n:30;
-        workspaceTimer.Interval=TimeSpan.FromSeconds(settings.Interval);
-        try{File.WriteAllText(Path.Combine(WorkspaceFolder,"settings.json"),JsonSerializer.Serialize(settings));if(!settings.Recovery)File.Delete(Path.Combine(WorkspaceFolder,"recovery.json"));}catch(Exception ex){StatusText.Text=ex.Message;}
+        settings.SpellEnabled=spell.IsChecked==true;settings.SpellLanguage=language.SelectedItem as string??"es-ES";settings.Wrap=wrap.IsChecked==true;Editor.WordWrap=settings.Wrap;light=bright.IsChecked==true;SpellMenu.IsChecked=settings.SpellEnabled;
+        workspaceTimer.Interval=TimeSpan.FromSeconds(settings.Interval);ApplyTheme();PersistAppearance();QueueSpelling();
+        try{if(!settings.Recovery)File.Delete(Path.Combine(WorkspaceFolder,"recovery.json"));}catch(Exception ex){StatusText.Text=ex.Message;}
         WriteRecovery();
     }
     private static void WriteDocumentSafely(string path,string content)

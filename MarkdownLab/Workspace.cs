@@ -81,7 +81,7 @@ public partial class MainWindow
         WriteRecovery();
     }
     private void Remember(string path){recent.RemoveAll(p=>string.Equals(p,path,StringComparison.OrdinalIgnoreCase));recent.Insert(0,path);if(recent.Count>15)recent.RemoveRange(15,recent.Count-15);try{File.WriteAllText(Path.Combine(WorkspaceFolder,"recent.json"),JsonSerializer.Serialize(recent));}catch{}UpdateRecent();}
-    private void UpdateRecent(){RecentMenu.Items.Clear();foreach(var p in recent){var item=new MenuItem{Header=p};item.Click+=(_,_)=>LoadFile(p);RecentMenu.Items.Add(item);}}
+    private void UpdateRecent(){WelcomeRecent.ItemsSource=recent.Where(File.Exists).Take(5).ToList();RecentMenu.Items.Clear();foreach(var p in recent){var item=new MenuItem{Header=p};item.Click+=(_,_)=>LoadFile(p);RecentMenu.Items.Add(item);}}
     private void WriteRecovery(){try{if(!settings.Recovery)return;CaptureTab();var path=Path.Combine(WorkspaceFolder,"recovery.json");File.WriteAllText(path+".tmp",JsonSerializer.Serialize(documents.Where(d=>d.Dirty).ToList()));File.Move(path+".tmp",path,true);}catch{}}
     private void Folder_Click(object sender,RoutedEventArgs e){var picker=new OpenFolderDialog();if(picker.ShowDialog()!=true)return;try{FolderFiles.ItemsSource=Directory.EnumerateFiles(picker.FolderName,"*",SearchOption.TopDirectoryOnly).Where(p=>p.EndsWith(".md",StringComparison.OrdinalIgnoreCase)||p.EndsWith(".markdown",StringComparison.OrdinalIgnoreCase)).OrderBy(p=>p).ToList();FolderFiles.Visibility=Visibility.Visible;}catch(Exception ex){StatusText.Text=ex.Message;}}
     private void FolderFile_Click(object sender,MouseButtonEventArgs e){if(FolderFiles.SelectedItem is string path)LoadFile(path);}

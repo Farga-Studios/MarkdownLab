@@ -19,13 +19,7 @@ public partial class MainWindow
     }
     private void Spell_Click(object sender,RoutedEventArgs e)
     {
-        if(!started)return;
-        var panel=new StackPanel{Margin=new Thickness(16),Width=480};
-        panel.Children.Add(new TextBlock{Text="Revisión ortográfica (español). Aplica los cambios para actualizar el documento.",TextWrapping=TextWrapping.Wrap});
-        var text=new TextBox{Text=Editor.Text,AcceptsReturn=true,TextWrapping=TextWrapping.Wrap,Height=320,VerticalScrollBarVisibility=ScrollBarVisibility.Auto,Language=System.Windows.Markup.XmlLanguage.GetLanguage("es-ES")};
-        SpellCheck.SetIsEnabled(text,true);panel.Children.Add(text);
-        var apply=new Button{Content="Aplicar cambios"};panel.Children.Add(apply);var dialog=Dialog("Corrector ortográfico",panel);
-        apply.Click+=(_,_)=>{Editor.Document.Replace(0,Editor.Document.TextLength,text.Text);dialog.Close();};dialog.ShowDialog();
+        settings.SpellEnabled=SpellMenu.IsChecked;PersistAppearance();QueueSpelling();
     }
     private void ExportHtml_Click(object sender,RoutedEventArgs e)
     {

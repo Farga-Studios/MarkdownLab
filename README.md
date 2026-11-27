@@ -87,3 +87,7 @@ Custom window chrome, bordered tabs, themed heading picker, reorganized file men
 ## 1.5.2
 
 Shared themed application dialogs, custom dialog title bars, red close-button hover and improved Markdown syntax contrast. Native system file pickers and message boxes retain Windows styling.
+
+## 1.5.3
+
+Integrated spelling underlines and context suggestions using Windows WPF dictionaries (availability varies), categorized preferences, recent documents on welcome screen and vector welcome logo. Spelling is opt-in and skips common code/URL patterns; limited to 150,000 characters and 1,000 errors per pass.

@@ -34,6 +34,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        InitSpelling();
         InitWorkspace();
         Editor.TextArea.Caret.PositionChanged += (_, _) => UpdateListButtons();
         Editor.TextArea.TextView.ScrollOffsetChanged += (_, _) => SyncPreview();
@@ -165,7 +166,7 @@ public partial class MainWindow : Window
 
     private void ApplyMode()
     {
-        FormatBar.Visibility = started && mode != ViewMode.Read ? Visibility.Visible : Visibility.Collapsed;
+        FormatBar.Visibility = !focusMode && started && mode != ViewMode.Read ? Visibility.Visible : Visibility.Collapsed;
         Welcome.Visibility = started ? Visibility.Collapsed : Visibility.Visible;
         Editor.Visibility = !started || mode == ViewMode.Read ? Visibility.Collapsed : Visibility.Visible;
         ReadButton.Background = (Brush)Resources[mode == ViewMode.Read ? "Accent" : "Panel"];
