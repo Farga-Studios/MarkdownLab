@@ -39,7 +39,7 @@ public partial class MainWindow : Window
         Editor.TextArea.TextView.ScrollOffsetChanged += (_, _) => SyncPreview();
         Editor.PreviewKeyDown += EditorKeys;
         Editor.TextArea.TextEntering += AutoPair;
-        Editor.SyntaxHighlighting = ICSharpCode.AvalonEdit.Highlighting.HighlightingManager.Instance.GetDefinitionByExtension(".md");
+        ApplyMarkdownColors();
         refreshTimer.Tick += (_, _) => { refreshTimer.Stop(); RefreshPreview(); };
         Loaded += async (_, _) => {
             ApplyMode();
@@ -221,6 +221,7 @@ public partial class MainWindow : Window
     }
     private void ApplyTheme()
     {
+        ApplyMarkdownColors();
         foreach (var (key, dark, bright) in new[] { ("Surface","#181B22","#FFFFFF"), ("Panel","#222630","#F0F3F8"), ("Ink","#E6EAF2","#202734"), ("Muted","#A4AFC1","#536175"), ("Edge","#383F4D","#CDD5E0"), ("Accent","#42669D","#A8C8F2") })
             Resources[key] = new SolidColorBrush((Color)ColorConverter.ConvertFromString(light ? bright : dark));
         ApplyMode(); RefreshPreview();
@@ -394,7 +395,7 @@ public partial class MainWindow : Window
         var fraction = range > 0 ? Math.Clamp(Editor.VerticalOffset / range, 0, 1) : 0;
         try { _ = Preview.ExecuteScriptAsync("window.scrollTo(0,(document.documentElement.scrollHeight-innerHeight)*" + fraction.ToString(System.Globalization.CultureInfo.InvariantCulture) + ")"); } catch { }
     }
-    private Window Dialog(string title, StackPanel panel) => new() { Title = title, Owner = this, Content = panel, SizeToContent = SizeToContent.WidthAndHeight, WindowStartupLocation = WindowStartupLocation.CenterOwner, ResizeMode = ResizeMode.NoResize, Background = (Brush)Resources["Panel"], Foreground = (Brush)Resources["Ink"] };
+    private Window Dialog(string title, StackPanel panel) => CreateThemedDialog(title, panel);
     private void InsertImage()
     {
         var panel = new StackPanel { Margin = new Thickness(16), Width = 360 };

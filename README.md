@@ -83,3 +83,7 @@ Custom vector toolbar icons (project-owned geometry), themed menus and selection
 ## 1.5.1
 
 Custom window chrome, bordered tabs, themed heading picker, reorganized file menu, resizable split view and Markdown guide. Integrated spelling and further visual refinement remain pending.
+
+## 1.5.2
+
+Shared themed application dialogs, custom dialog title bars, red close-button hover and improved Markdown syntax contrast. Native system file pickers and message boxes retain Windows styling.
