@@ -38,7 +38,7 @@ public partial class MainWindow
             spellingProbe.Text=masked;
             int offset=0;
             while(offset<masked.Length && spellingErrors.Count<1000){
-                int index=spellingProbe.GetNextSpellingErrorCharacterIndex(offset,LogicalDirection.Forward);if(index<0)break;
+                int index=spellingProbe.GetNextSpellingErrorCharacterIndex(offset,System.Windows.Documents.LogicalDirection.Forward);if(index<0)break;
                 int length=spellingProbe.GetSpellingErrorLength(index);if(length<=0){offset=index+1;continue;}
                 var error=spellingProbe.GetSpellingError(index);
                 if(error!=null&&!ignoredWords.Contains(source.Substring(index,length)))spellingErrors.Add((index,length,error.Suggestions.Take(6).ToArray()));

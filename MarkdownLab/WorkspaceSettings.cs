@@ -84,11 +84,13 @@ public partial class MainWindow
     private bool ConfirmExit()
     {
         CaptureTab();var pending=documents.Where(t=>t.Dirty).ToArray();
+        var discarded=new HashSet<TabDoc>();
         foreach(var d in pending)
         {
             if(!d.Dirty)continue;Tabs.SelectedItem=d;int answer=AskSave(d.Label,pending.Length>1);
             if(answer==0)return false;
-            if(answer==3){if(!SaveAll())return false;break;}
+            if(answer==3){foreach(var other in pending.Where(t=>t.Dirty&&!discarded.Contains(t))){Tabs.SelectedItem=other;if(!SaveFile())return false;}break;}
+            if(answer==2)discarded.Add(d);
             if(answer==1 && !SaveFile())return false;
         }
         try{

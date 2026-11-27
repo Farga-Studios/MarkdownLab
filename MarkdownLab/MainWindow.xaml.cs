@@ -98,24 +98,15 @@ public partial class MainWindow : Window
             var content = File.ReadAllText(path);
             AddDocument(path, content, false, ViewMode.Read);
             Remember(path);
-            return;
-#pragma warning disable CS0162
-            updating = true;
-            Editor.Text = content;
-            filePath = path;
-            started = true; mode = ViewMode.Read; ApplyMode();
-            dirty = false;
-            Title = $"MarkdownLab — {Path.GetFileName(path)}";
-            StatusText.Text = path;
-            RefreshPreview();
+
         }
         catch (Exception ex) { MessageBox.Show(ex.Message, "No se pudo abrir", MessageBoxButton.OK, MessageBoxImage.Error); }
         finally { updating = false; }
-#pragma warning restore CS0162
     }
 
     private bool SaveFile(bool saveAs = false)
     {
+        if (!started) return false;
         var path = filePath;
         if (path is null || saveAs)
         {
@@ -125,6 +116,7 @@ public partial class MainWindow : Window
         }
         try
         {
+            if (documents.Any(d => !ReferenceEquals(d,current) && string.Equals(d.Path,Path.GetFullPath(path),StringComparison.OrdinalIgnoreCase))) { MessageBox.Show("El archivo ya está abierto en otra pestaña."); return false; }
             WriteDocumentSafely(path, Editor.Text);
             filePath = path; dirty = false; CaptureTab(); Remember(path); WriteRecovery(); RefreshPreview();
             Title = $"MarkdownLab — {Path.GetFileName(path)}";

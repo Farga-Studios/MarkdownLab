@@ -91,3 +91,7 @@ Shared themed application dialogs, custom dialog title bars, red close-button ho
 ## 1.5.3
 
 Integrated spelling underlines and context suggestions using Windows WPF dictionaries (availability varies), categorized preferences, recent documents on welcome screen and vector welcome logo. Spelling is opt-in and skips common code/URL patterns; limited to 150,000 characters and 1,000 errors per pass.
+
+## 1.6.0 — Stable candidate
+
+Windows x64 installer and portable ZIP built by CI. [Manual en español](docs/MANUAL.es.md). Tagged builds prepare draft releases for review. WebView2 Runtime required.
