@@ -22,4 +22,4 @@ Help > Check for updates checks GitHub stable releases; installed copies downloa
 
 ## Support
 
-Report issues at https://github.com/Sealsworn/MarkdownLab/issues. MIT license.
+Report issues at https://github.com/Farga-Studios/MarkdownLab/issues. MIT license.

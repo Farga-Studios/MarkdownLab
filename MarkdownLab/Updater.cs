@@ -11,7 +11,7 @@ public partial class MainWindow
 {
     private static readonly HttpClient updateHttp = new(){Timeout=TimeSpan.FromMinutes(3)};
     private bool checkingUpdate;
-    private const string ReleasePage="https://github.com/Sealsworn/MarkdownLab/releases/latest";
+    private const string ReleasePage="https://github.com/Farga-Studios/MarkdownLab/releases/latest";
     private async void CheckUpdates_Click(object sender,RoutedEventArgs e)=>await CheckUpdatesAsync(true);
     private async Task CheckUpdatesAsync(bool manual)
     {
@@ -19,8 +19,8 @@ public partial class MainWindow
         checkingUpdate=true;
         try
         {
-            using var request=new HttpRequestMessage(HttpMethod.Get,"https://api.github.com/repos/Sealsworn/MarkdownLab/releases/latest");
-            request.Headers.UserAgent.ParseAdd("MarkdownLab/1.6");
+            using var request=new HttpRequestMessage(HttpMethod.Get,"https://api.github.com/repos/Farga-Studios/MarkdownLab/releases/latest");
+            request.Headers.UserAgent.ParseAdd("MarkdownLab/"+(Assembly.GetExecutingAssembly().GetName().Version?.ToString(3)??"1.7.0"));
             request.Headers.Accept.ParseAdd("application/vnd.github+json");
             using var response=await updateHttp.SendAsync(request);
             if(response.StatusCode==System.Net.HttpStatusCode.NotFound){if(manual)UpdateNotice(L.T("Todavía no hay versiones publicadas."));return;}
@@ -49,7 +49,7 @@ public partial class MainWindow
             var asset=root.GetProperty("assets").EnumerateArray().FirstOrDefault(a=>a.GetProperty("name").GetString()=="MarkdownLab-Setup-win-x64.exe");
             if(asset.ValueKind==JsonValueKind.Undefined)throw new InvalidOperationException(L.T("No se encontró el instalador."));
             var url=asset.GetProperty("browser_download_url").GetString()??"";
-            if(!url.StartsWith("https://github.com/Sealsworn/MarkdownLab/releases/download/",StringComparison.Ordinal))throw new InvalidOperationException(L.T("Origen de descarga no válido."));
+            if(!url.StartsWith("https://github.com/Farga-Studios/MarkdownLab/releases/download/",StringComparison.Ordinal))throw new InvalidOperationException(L.T("Origen de descarga no válido."));
             if(!asset.TryGetProperty("digest",out var digestProp)||digestProp.ValueKind!=JsonValueKind.String)throw new InvalidOperationException(L.T("La versión no proporciona una huella SHA-256. Descárgala manualmente."));
             var digest=digestProp.GetString()??"";
             if(!digest.StartsWith("sha256:",StringComparison.OrdinalIgnoreCase)||digest.Length!=71)throw new InvalidOperationException(L.T("Huella del instalador no válida."));

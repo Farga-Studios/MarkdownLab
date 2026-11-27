@@ -3,8 +3,8 @@
 AppId=Sealsworn.MarkdownLab
 AppName=MarkdownLab
 AppVersion={#AppVersion}
-AppPublisher=Sealsworn
-AppPublisherURL=https://github.com/Sealsworn/MarkdownLab
+AppPublisher=Farga Studios
+AppPublisherURL=https://github.com/Farga-Studios/MarkdownLab
 DefaultDirName={localappdata}\Programs\MarkdownLab
 DefaultGroupName=MarkdownLab
 PrivilegesRequired=lowest

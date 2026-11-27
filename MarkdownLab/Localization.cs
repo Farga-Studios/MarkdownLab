@@ -168,7 +168,7 @@ internal static class L
         ("columnas", "columns"),
         ("filas", "rows"),
         ("Versión", "Version"),
-        ("Desarrollado por Sealsworn", "Developed by Sealsworn"),
+        ("Desarrollado por Farga Studios", "Developed by Farga Studios"),
         ("Licencia MIT", "MIT license"),
         ("Lector y editor Markdown para Windows", "Markdown reader and editor for Windows"),
         ("Documento", "Document"),

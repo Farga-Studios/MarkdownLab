@@ -2,15 +2,15 @@
 
 # MarkdownLab
 
-A lightweight, modern Markdown reader and editor for Windows. Developed by **Sealsworn**.
+A lightweight, modern Markdown reader and editor for Windows. Developed by **Farga Studios**.
 
-[Español](README.es.md) · [Releases](https://github.com/Sealsworn/MarkdownLab/releases) · [User guide](docs/MANUAL.en.md) · [Changelog](CHANGELOG.md)
+[Español](README.es.md) · [Releases](https://github.com/Farga-Studios/MarkdownLab/releases) · [User guide](docs/MANUAL.en.md) · [Changelog](CHANGELOG.md)
 
-![MIT](https://img.shields.io/badge/license-MIT-blue) ![Windows](https://img.shields.io/badge/Windows-x64-blue) ![Build](https://github.com/Sealsworn/MarkdownLab/actions/workflows/windows.yml/badge.svg)
+![MIT](https://img.shields.io/badge/license-MIT-blue) ![Windows](https://img.shields.io/badge/Windows-x64-blue) ![Build](https://github.com/Farga-Studios/MarkdownLab/actions/workflows/windows.yml/badge.svg)
 
 ## Download
 
-Visit [GitHub Releases](https://github.com/Sealsworn/MarkdownLab/releases/latest) for the Windows x64 installer or portable ZIP. Microsoft Edge WebView2 Runtime is required; .NET is bundled. The English interface is introduced in 1.7.0; the current public release may be older.
+Visit [GitHub Releases](https://github.com/Farga-Studios/MarkdownLab/releases/latest) for the Windows x64 installer or portable ZIP. Microsoft Edge WebView2 Runtime is required; .NET is bundled. The English interface is introduced in 1.7.0; the current public release may be older.
 
 ## Features
 

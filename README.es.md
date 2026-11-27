@@ -2,11 +2,11 @@
 
 # MarkdownLab
 
-Lector y editor Markdown ligero y moderno para Windows. Desarrollado por **Sealsworn**.
+Lector y editor Markdown ligero y moderno para Windows. Desarrollado por **Farga Studios**.
 
-[English](README.md) · [Descargas](https://github.com/Sealsworn/MarkdownLab/releases/latest) · [Manual](docs/MANUAL.es.md) · [Historial](CHANGELOG.md)
+[English](README.md) · [Descargas](https://github.com/Farga-Studios/MarkdownLab/releases/latest) · [Manual](docs/MANUAL.es.md) · [Historial](CHANGELOG.md)
 
-![MIT](https://img.shields.io/badge/license-MIT-blue) ![Windows](https://img.shields.io/badge/Windows-x64-blue) ![Build](https://github.com/Sealsworn/MarkdownLab/actions/workflows/windows.yml/badge.svg)
+![MIT](https://img.shields.io/badge/license-MIT-blue) ![Windows](https://img.shields.io/badge/Windows-x64-blue) ![Build](https://github.com/Farga-Studios/MarkdownLab/actions/workflows/windows.yml/badge.svg)
 
 ## Descargas
 

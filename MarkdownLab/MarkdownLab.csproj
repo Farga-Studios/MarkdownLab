@@ -8,11 +8,11 @@
     <ApplicationIcon>Assets/MarkdownLab.ico</ApplicationIcon>
     <AssemblyName>MarkdownLab</AssemblyName>
     <Version>1.7.0</Version>
-    <Company>Sealsworn</Company>
-    <Authors>Sealsworn</Authors>
+    <Company>Farga Studios</Company>
+    <Authors>Farga Studios</Authors>
     <Product>MarkdownLab</Product>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <RepositoryUrl>https://github.com/Sealsworn/MarkdownLab</RepositoryUrl>
+    <RepositoryUrl>https://github.com/Farga-Studios/MarkdownLab</RepositoryUrl>
   </PropertyGroup>
   <ItemGroup>
     <Resource Include="Assets/MarkdownLab.ico" />

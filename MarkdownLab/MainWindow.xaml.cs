@@ -326,13 +326,13 @@ public partial class MainWindow : Window
         var panel = new StackPanel { Margin = new Thickness(24), Width = 340 };
         panel.Children.Add(new Image { Source = Icon, Width = 64, Height = 64 });
         panel.Children.Add(new TextBlock { Text = "MarkdownLab", FontSize = 26, FontWeight = FontWeights.SemiBold, TextAlignment = TextAlignment.Center, Margin = new Thickness(0,12,0,4) });
-        panel.Children.Add(new TextBlock { Text = $"{L.T("Versión")} {version}\n{L.T("Desarrollado por Sealsworn")}\n{L.T("Licencia MIT")}\n{L.T("Lector y editor Markdown para Windows")}", TextAlignment = TextAlignment.Center, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0,4,0,16) });
+        panel.Children.Add(new TextBlock { Text = $"{L.T("Versión")} {version}\n{L.T("Desarrollado por Farga Studios")}\n{L.T("Licencia MIT")}\n{L.T("Lector y editor Markdown para Windows")}", TextAlignment = TextAlignment.Center, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0,4,0,16) });
         var link = new Button { Content = L.T("Repositorio oficial · GitHub") };
         panel.Children.Add(link);
         var close = new Button { Content = L.T("Cerrar"), IsCancel = true, IsDefault = true };
         panel.Children.Add(close);
         var dialog = Dialog(L.T("Acerca de MarkdownLab"), panel);
-        link.Click += (_, _) => { try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("https://github.com/Sealsworn/MarkdownLab") { UseShellExecute = true }); } catch (Exception ex) { MessageBox.Show(dialog, ex.Message); } };
+        link.Click += (_, _) => { try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("https://github.com/Farga-Studios/MarkdownLab") { UseShellExecute = true }); } catch (Exception ex) { MessageBox.Show(dialog, ex.Message); } };
         dialog.ShowDialog();
     }
 
