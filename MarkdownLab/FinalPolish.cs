@@ -25,13 +25,13 @@ public partial class MainWindow
     {
         if(!started)return;RefreshPreview();var picker=new SaveFileDialog{Filter="HTML|*.html",FileName=Path.GetFileNameWithoutExtension(filePath??"documento")+".html"};
         if(picker.ShowDialog()!=true)return;
-        try{var html=Regex.Replace(lastHtml,@"https://markdownlab-assets\.invalid/([A-Fa-f0-9]+\.[a-zA-Z]+)",m=>{var p=Path.Combine(WorkspaceFolder,"images",m.Groups[1].Value);if(!File.Exists(p))return m.Value;var ext=Path.GetExtension(p).ToLowerInvariant();var mime=ext==".jpg"||ext==".jpeg"?"jpeg":ext.TrimStart('.');return "data:image/"+mime+";base64,"+Convert.ToBase64String(File.ReadAllBytes(p));});File.WriteAllText(picker.FileName,html);StatusText.Text="HTML exportado";}catch(Exception ex){MessageBox.Show(ex.Message);}
+        try{var html=Regex.Replace(lastHtml,@"https://markdownlab-assets\.invalid/([A-Fa-f0-9]+\.[a-zA-Z]+)",m=>{var p=Path.Combine(WorkspaceFolder,"images",m.Groups[1].Value);if(!File.Exists(p))return m.Value;var ext=Path.GetExtension(p).ToLowerInvariant();var mime=ext==".jpg"||ext==".jpeg"?"jpeg":ext.TrimStart('.');return "data:image/"+mime+";base64,"+Convert.ToBase64String(File.ReadAllBytes(p));});File.WriteAllText(picker.FileName,html);StatusText.Text=L.T("HTML exportado");}catch(Exception ex){MessageBox.Show(ex.Message);}
     }
     private async void ExportPdf_Click(object sender,RoutedEventArgs e)
     {
         if(!started||!ready)return;var picker=new SaveFileDialog{Filter="PDF|*.pdf",FileName=Path.GetFileNameWithoutExtension(filePath??"documento")+".pdf"};
         if(picker.ShowDialog()!=true)return;
-        try{var print=Preview.CoreWebView2.Environment.CreatePrintSettings();print.ShouldPrintBackgrounds=true;StatusText.Text=await Preview.CoreWebView2.PrintToPdfAsync(picker.FileName,print)?"PDF exportado":"No se pudo exportar PDF";}catch(Exception ex){MessageBox.Show(ex.Message);}
+        try{var print=Preview.CoreWebView2.Environment.CreatePrintSettings();print.ShouldPrintBackgrounds=true;StatusText.Text=await Preview.CoreWebView2.PrintToPdfAsync(picker.FileName,print)?L.T("PDF exportado"):L.T("No se pudo exportar PDF");}catch(Exception ex){MessageBox.Show(ex.Message);}
     }
     private static string HighlightCode(string html)
     {

@@ -34,7 +34,7 @@ public partial class MainWindow
             var source=Editor.Text;
             // Preserve offsets while excluding code, link destinations and URLs.
             var masked=Regex.Replace(source,@"(?ms)^ {0,3}(?:\x60{3,}|~{3,}).*?^ {0,3}(?:\x60{3,}|~{3,})[^\r\n]*|(?-ms:\x60[^\x60\r\n]*\x60|\]\([^\r\n)]*\)|https?://\S+)",m=>new string(' ',m.Length));
-            if(masked.Length>150000){StatusText.Text="Corrector: documento demasiado largo";return;}
+            if(masked.Length>150000){StatusText.Text=L.T("Corrector: documento demasiado largo");return;}
             spellingProbe.Text=masked;
             int offset=0;
             while(offset<masked.Length && spellingErrors.Count<1000){
@@ -44,7 +44,7 @@ public partial class MainWindow
                 if(error!=null&&!ignoredWords.Contains(source.Substring(index,length)))spellingErrors.Add((index,length,error.Suggestions.Take(6).ToArray()));
                 offset=index+length;
             }
-        }catch(Exception){StatusText.Text="Corrector no disponible para el idioma seleccionado";}
+        }catch(Exception){StatusText.Text=L.T("Corrector no disponible para el idioma seleccionado");}
         Editor.TextArea.TextView.InvalidateLayer(KnownLayer.Background);
     }
     private void PopulateSpellingMenu(ContextMenu menu)
@@ -58,7 +58,7 @@ public partial class MainWindow
         if(error.Length==0)return;
         int at=0;var word=Editor.Document.GetText(error.Start,error.Length);
         foreach(var suggestion in error.Suggestions){var item=new MenuItem{Header=suggestion,Tag="spell-suggestion"};item.Click+=(_,_)=>{if(error.Start+error.Length<=Editor.Document.TextLength&&Editor.Document.GetText(error.Start,error.Length)==word)Editor.Document.Replace(error.Start,error.Length,suggestion);};menu.Items.Insert(at++,item);}
-        var ignore=new MenuItem{Header="Ignorar: "+word,Tag="spell-suggestion"};ignore.Click+=(_,_)=>{ignoredWords.Add(word);QueueSpelling();};menu.Items.Insert(at,ignore);
+        var ignore=new MenuItem{Header=L.T("Ignorar: ")+word,Tag="spell-suggestion"};ignore.Click+=(_,_)=>{ignoredWords.Add(word);QueueSpelling();};menu.Items.Insert(at,ignore);
     }
     private sealed class SpellingRenderer(MainWindow owner):IBackgroundRenderer
     {

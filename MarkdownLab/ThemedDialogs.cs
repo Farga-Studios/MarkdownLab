@@ -17,7 +17,7 @@ public partial class MainWindow
         var root=new DockPanel();
         var header=new DockPanel{Height=38,LastChildFill=true};
         header.SetResourceReference(Panel.BackgroundProperty,"Surface");
-        var close=new Button{Content="×",Width=44,Margin=new Thickness(0),Padding=new Thickness(0),Style=(Style)Resources["CloseChromeButton"],ToolTip="Cerrar"};
+        var close=new Button{Content="×",Width=44,Margin=new Thickness(0),Padding=new Thickness(0),Style=(Style)Resources["CloseChromeButton"],ToolTip=L.T("Cerrar")};
         WindowChrome.SetIsHitTestVisibleInChrome(close,true);
         close.Click+=(_,_)=>dialog.Close();
         DockPanel.SetDock(close,Dock.Right);header.Children.Add(close);

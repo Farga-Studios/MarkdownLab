@@ -16,7 +16,7 @@ public partial class MainWindow
         public bool Dirty {get;set;}
         public int Mode {get;set;}
         public int Caret {get;set;}
-        public string Label => (Path is null ? "Sin título" : System.IO.Path.GetFileName(Path)) + (Dirty ? " *" : "");
+        public string Label => (Path is null ? L.T("Sin título") : System.IO.Path.GetFileName(Path)) + (Dirty ? " *" : "");
         public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
         public void Notify() => PropertyChanged?.Invoke(this,new(nameof(Label)));
         [System.Text.Json.Serialization.JsonIgnore] public TextDocument? Document {get;set;}
@@ -38,7 +38,7 @@ public partial class MainWindow
             try {
                 if (settings.RestoreTabs) RestoreSession();
                 var recovered=JsonSerializer.Deserialize<List<TabDoc>>(File.ReadAllText(Path.Combine(WorkspaceFolder,"recovery.json")));
-                if(recovered?.Count>0 && MessageBox.Show("¿Recuperar documentos sin guardar?","MarkdownLab",MessageBoxButton.YesNo)==MessageBoxResult.Yes)
+                if(recovered?.Count>0 && MessageBox.Show(L.T("¿Recuperar documentos sin guardar?"),"MarkdownLab",MessageBoxButton.YesNo)==MessageBoxResult.Yes)
                     foreach(var d in recovered) { var existing=documents.FirstOrDefault(t=>d.Path!=null && string.Equals(t.Path,d.Path,StringComparison.OrdinalIgnoreCase)); if(existing!=null){Tabs.SelectedItem=existing; Editor.Text=d.Text; dirty=true; CaptureTab();} else AddDocument(d.Path,d.Text,true,(ViewMode)d.Mode); }
             } catch {}
         };
@@ -68,7 +68,7 @@ public partial class MainWindow
             current=d;filePath=d.Path;dirty=d.Dirty;mode=(ViewMode)d.Mode;started=true;
             Editor.Document=d.Document ??=new TextDocument(d.Text);
             Editor.CaretOffset=Math.Clamp(d.Caret,0,Editor.Document.TextLength);
-            Title="MarkdownLab — "+d.Label;StatusText.Text=filePath??"Nuevo documento";ApplyMode();RefreshPreview();
+            Title="MarkdownLab — "+d.Label;StatusText.Text=filePath??L.T("Nuevo documento");ApplyMode();RefreshPreview();
         } finally {updating=false;switching=false;}
     }
     private void CloseTab_Click(object sender,RoutedEventArgs e)
@@ -85,7 +85,7 @@ public partial class MainWindow
     private void WriteRecovery(){try{if(!settings.Recovery)return;CaptureTab();var path=Path.Combine(WorkspaceFolder,"recovery.json");File.WriteAllText(path+".tmp",JsonSerializer.Serialize(documents.Where(d=>d.Dirty).ToList()));File.Move(path+".tmp",path,true);}catch{}}
     private void Folder_Click(object sender,RoutedEventArgs e){var picker=new OpenFolderDialog();if(picker.ShowDialog()!=true)return;try{FolderFiles.ItemsSource=Directory.EnumerateFiles(picker.FolderName,"*",SearchOption.TopDirectoryOnly).Where(p=>p.EndsWith(".md",StringComparison.OrdinalIgnoreCase)||p.EndsWith(".markdown",StringComparison.OrdinalIgnoreCase)).OrderBy(p=>p).ToList();FolderFiles.Visibility=Visibility.Visible;}catch(Exception ex){StatusText.Text=ex.Message;}}
     private void FolderFile_Click(object sender,MouseButtonEventArgs e){if(FolderFiles.SelectedItem is string path)LoadFile(path);}
-    private void Replace_Click(object sender,RoutedEventArgs e){if(!started)return;var panel=new StackPanel{Margin=new Thickness(16),Width=320};var find=new TextBox{Text=SearchBox.Text};var replace=new TextBox();panel.Children.Add(new TextBlock{Text="Buscar"});panel.Children.Add(find);panel.Children.Add(new TextBlock{Text="Reemplazar por"});panel.Children.Add(replace);var all=new Button{Content="Reemplazar todo"};panel.Children.Add(all);var dialog=Dialog("Buscar y reemplazar",panel);all.Click+=(_,_)=>{if(find.Text.Length==0)return;var value=Editor.Text.Replace(find.Text,replace.Text,StringComparison.OrdinalIgnoreCase);Editor.Document.Replace(0,Editor.Document.TextLength,value);dialog.Close();};dialog.ShowDialog();}
+    private void Replace_Click(object sender,RoutedEventArgs e){if(!started)return;var panel=new StackPanel{Margin=new Thickness(16),Width=320};var find=new TextBox{Text=SearchBox.Text};var replace=new TextBox();panel.Children.Add(new TextBlock{Text=L.T("Buscar")});panel.Children.Add(find);panel.Children.Add(new TextBlock{Text=L.T("Reemplazar por")});panel.Children.Add(replace);var all=new Button{Content=L.T("Reemplazar todo")};panel.Children.Add(all);var dialog=Dialog(L.T("Buscar y reemplazar"),panel);all.Click+=(_,_)=>{if(find.Text.Length==0)return;var value=Editor.Text.Replace(find.Text,replace.Text,StringComparison.OrdinalIgnoreCase);Editor.Document.Replace(0,Editor.Document.TextLength,value);dialog.Close();};dialog.ShowDialog();}
     private static bool IsImage(string path)=>new[]{".png",".jpg",".jpeg",".gif",".webp",".bmp"}.Contains(Path.GetExtension(path).ToLowerInvariant()) && File.Exists(path);
     private string ImageMarkdown(string path,string alt){var full=Path.GetFullPath(path);var relative=filePath is null?new Uri(full).AbsoluteUri:Path.GetRelativePath(Path.GetDirectoryName(Path.GetFullPath(filePath))!,full).Replace('\\','/');return "!["+alt.Replace("]","\\]")+"](<"+relative.Replace(">","%3E")+">)";}
 }
