@@ -1,4 +1,4 @@
-#define AppVersion "1.6.1"
+#define AppVersion "1.7.0"
 [Setup]
 AppId=Sealsworn.MarkdownLab
 AppName=MarkdownLab
@@ -20,10 +20,14 @@ UninstallDisplayIcon={app}\MarkdownLab.exe
 LicenseFile=..\LICENSE
 ChangesAssociations=yes
 [Languages]
+Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
 [Tasks]
-Name: "desktopicon"; Description: "Crear acceso directo en el escritorio"; Flags: unchecked
-Name: "associate"; Description: "Registrar MarkdownLab en Abrir con para archivos Markdown"; Flags: unchecked
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; Flags: unchecked
+Name: "associate"; Description: "{cm:AssociateMarkdown}"; Flags: unchecked
+[CustomMessages]
+english.AssociateMarkdown=Register MarkdownLab in Open with for Markdown files
+spanish.AssociateMarkdown=Registrar MarkdownLab en Abrir con para archivos Markdown
 [Files]
 Source: "installed.marker"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
@@ -37,4 +41,4 @@ Root: HKCU; Subkey: "Software\Classes\MarkdownLab.Document\shell\open\command"; 
 Root: HKCU; Subkey: "Software\Classes\.md\OpenWithProgids"; ValueType: string; ValueName: "MarkdownLab.Document"; ValueData: ""; Flags: uninsdeletevalue; Tasks: associate
 Root: HKCU; Subkey: "Software\Classes\.markdown\OpenWithProgids"; ValueType: string; ValueName: "MarkdownLab.Document"; ValueData: ""; Flags: uninsdeletevalue; Tasks: associate
 [Run]
-Filename: "{app}\MarkdownLab.exe"; Description: "Abrir MarkdownLab"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\MarkdownLab.exe"; Description: "{cm:LaunchProgram,MarkdownLab}"; Flags: nowait postinstall skipifsilent

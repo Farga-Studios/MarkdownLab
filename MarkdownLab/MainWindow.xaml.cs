@@ -97,7 +97,7 @@ public partial class MainWindow : Window
 
     private void OpenFile()
     {
-        var dialog = new OpenFileDialog { Filter = "Markdown (*.md;*.markdown)|*.md;*.markdown|Todos los archivos (*.*)|*.*" };
+        var dialog = new OpenFileDialog { Filter = L.T("Markdown (*.md;*.markdown)|*.md;*.markdown|Todos los archivos (*.*)|*.*") };
         if (dialog.ShowDialog() == true) LoadFile(dialog.FileName);
     }
 
@@ -412,7 +412,7 @@ public partial class MainWindow : Window
         var browse = new Button { Content = L.T("Elegir del dispositivo…") }; panel.Children.Add(browse);
         var ok = new Button { Content = L.T("Insertar"), IsDefault = true }; panel.Children.Add(ok);
         var dialog = Dialog(L.T("Insertar imagen"), panel);
-        browse.Click += (_, _) => { var picker = new OpenFileDialog { Filter = "Imágenes|*.png;*.jpg;*.jpeg;*.gif;*.webp;*.bmp" }; if (picker.ShowDialog(dialog) == true) url.Text = picker.FileName; };
+        browse.Click += (_, _) => { var picker = new OpenFileDialog { Filter = L.T("Imágenes|*.png;*.jpg;*.jpeg;*.gif;*.webp;*.bmp") }; if (picker.ShowDialog(dialog) == true) url.Text = picker.FileName; };
         ok.Click += (_, _) => { if (!string.IsNullOrWhiteSpace(url.Text)) dialog.DialogResult = true; };
         if (dialog.ShowDialog() != true) return;
         var path = url.Text.Trim();

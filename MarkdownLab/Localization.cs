@@ -171,6 +171,20 @@ internal static class L
         ("Desarrollado por Sealsworn", "Developed by Sealsworn"),
         ("Licencia MIT", "MIT license"),
         ("Lector y editor Markdown para Windows", "Markdown reader and editor for Windows"),
+        ("Documento", "Document"),
+        ("documento", "document"),
+        ("Columna", "Column"),
+        ("`código`", "`code`"),
+        ("- elemento", "- item"),
+        ("1. elemento", "1. item"),
+        ("- [ ] tarea", "- [ ] task"),
+        ("**texto**", "**text**"),
+        ("*texto*", "*text*"),
+        ("~~texto~~", "~~text~~"),
+        ("[texto](URL)", "[text](URL)"),
+        ("![imagen](URL)", "![image](URL)"),
+        ("Markdown (*.md;*.markdown)|*.md;*.markdown|Todos los archivos (*.*)|*.*", "Markdown (*.md;*.markdown)|*.md;*.markdown|All files (*.*)|*.*"),
+        ("Imágenes|*.png;*.jpg;*.jpeg;*.gif;*.webp;*.bmp", "Images|*.png;*.jpg;*.jpeg;*.gif;*.webp;*.bmp"),
     };
     private static readonly Dictionary<string,string> English=Strings.ToDictionary(p=>p.Es,p=>p.En,StringComparer.Ordinal);
     public static string T(string spanish)=>!IsSpanish&&English.TryGetValue(spanish,out var translated)?translated:spanish;
