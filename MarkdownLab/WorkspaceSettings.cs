@@ -9,6 +9,7 @@ public partial class MainWindow
     private sealed class Preferences
     {
         public bool AutoSave {get;set;}
+        public bool CheckUpdatesOnStartup {get;set;} = true;
         public bool SpellEnabled {get;set;} = false;
         public string SpellLanguage {get;set;} = "es-ES";
         public bool Wrap {get;set;} = true;
@@ -33,7 +34,7 @@ public partial class MainWindow
         panel.Children.Add(tabs);
         StackPanel Page(string title){var p=new StackPanel{Margin=new Thickness(12)};tabs.Items.Add(new TabItem{Header=title,Content=p});return p;}
         CheckBox Check(StackPanel p,string label,bool value){var c=new CheckBox{Content=label,IsChecked=value,Margin=new Thickness(0,7,0,7),Foreground=(System.Windows.Media.Brush)Resources["Ink"]};p.Children.Add(c);return c;}
-        var general=Page("General");var restore=Check(general,"Restaurar pestañas al iniciar",settings.RestoreTabs);
+        var general=Page("General");var updates=Check(general,"Buscar actualizaciones al iniciar",settings.CheckUpdatesOnStartup);var restore=Check(general,"Restaurar pestañas al iniciar",settings.RestoreTabs);
         var appearance=Page("Apariencia");var bright=Check(appearance,"Tema claro",light);
         var edit=Page("Editor");var wrap=Check(edit,"Ajustar líneas al ancho",Editor.WordWrap);var spell=Check(edit,"Corrector ortográfico integrado",settings.SpellEnabled);
         edit.Children.Add(new TextBlock{Text="Idioma del corrector"});var language=new ComboBox{ItemsSource=new[]{"es-ES","en-US","en-GB","ca-ES"},SelectedItem=settings.SpellLanguage};edit.Children.Add(language);
@@ -42,7 +43,7 @@ public partial class MainWindow
         var ok=new Button{Content="Guardar configuración",IsDefault=true,Margin=new Thickness(0,12,0,0)};panel.Children.Add(ok);
         var dialog=Dialog("Configuración",panel);ok.Click+=(_,_)=>dialog.DialogResult=true;
         if(dialog.ShowDialog()!=true)return;
-        settings.AutoSave=auto.IsChecked==true;settings.Recovery=recovery.IsChecked==true;settings.RestoreTabs=restore.IsChecked==true;settings.Interval=interval.SelectedItem is int n?n:30;
+        settings.CheckUpdatesOnStartup=updates.IsChecked==true;settings.AutoSave=auto.IsChecked==true;settings.Recovery=recovery.IsChecked==true;settings.RestoreTabs=restore.IsChecked==true;settings.Interval=interval.SelectedItem is int n?n:30;
         settings.SpellEnabled=spell.IsChecked==true;settings.SpellLanguage=language.SelectedItem as string??"es-ES";settings.Wrap=wrap.IsChecked==true;Editor.WordWrap=settings.Wrap;light=bright.IsChecked==true;SpellMenu.IsChecked=settings.SpellEnabled;
         workspaceTimer.Interval=TimeSpan.FromSeconds(settings.Interval);ApplyTheme();PersistAppearance();QueueSpelling();
         try{if(!settings.Recovery)File.Delete(Path.Combine(WorkspaceFolder,"recovery.json"));}catch(Exception ex){StatusText.Text=ex.Message;}

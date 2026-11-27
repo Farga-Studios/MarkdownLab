@@ -25,3 +25,6 @@ Si no se ve la lectura, comprueba WebView2 y reinicia. Consulta Ayuda > Acerca d
 
 ## Abrir desde Windows
 MarkdownLab usa una sola instancia por usuario y sesión. Si ya está abierto, los archivos .md y .markdown recibidos desde el explorador se abren en pestañas; si un archivo ya está abierto se selecciona su pestaña. Si la ventana está minimizada se restaura.
+
+## Actualizaciones
+Ayuda > Buscar actualizaciones consulta la última release estable de GitHub. La comprobación al iniciar se puede desactivar en General. En instalaciones normales descarga el instalador previa confirmación y comprueba su SHA-256 publicado por GitHub; guarda los documentos antes de ejecutarlo. En modo portátil abre la página de descarga para actualizar manualmente.

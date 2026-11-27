@@ -36,6 +36,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         InitSpelling();
         InitWorkspace();
+        Loaded += async (_,_)=> { if(settings.CheckUpdatesOnStartup) await CheckUpdatesAsync(false); };
         Editor.TextArea.Caret.PositionChanged += (_, _) => UpdateListButtons();
         Editor.TextArea.TextView.ScrollOffsetChanged += (_, _) => SyncPreview();
         Editor.PreviewKeyDown += EditorKeys;
