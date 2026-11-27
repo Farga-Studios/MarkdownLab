@@ -1,4 +1,4 @@
-# MarkdownLab 1.6 — Manual de usuario
+# MarkdownLab 1.6.1 — Manual de usuario
 
 MarkdownLab es un lector y editor Markdown para Windows de Sealsworn, bajo licencia MIT.
 

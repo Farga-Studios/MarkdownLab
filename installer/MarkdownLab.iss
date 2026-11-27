@@ -1,4 +1,4 @@
-#define AppVersion "1.6.0"
+#define AppVersion "1.6.1"
 [Setup]
 AppId=Sealsworn.MarkdownLab
 AppName=MarkdownLab
@@ -15,6 +15,7 @@ OutputBaseFilename=MarkdownLab-Setup-win-x64
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
+SetupIconFile=..\MarkdownLab\Assets\MarkdownLab.ico
 UninstallDisplayIcon={app}\MarkdownLab.exe
 LicenseFile=..\LICENSE
 ChangesAssociations=yes
@@ -34,5 +35,6 @@ Root: HKCU; Subkey: "Software\Classes\MarkdownLab.Document\DefaultIcon"; ValueTy
 Root: HKCU; Subkey: "Software\Classes\MarkdownLab.Document"; ValueType: string; ValueData: "Documento Markdown"; Flags: uninsdeletekey; Tasks: associate
 Root: HKCU; Subkey: "Software\Classes\MarkdownLab.Document\shell\open\command"; ValueType: string; ValueData: """{app}\MarkdownLab.exe"" ""%1"""; Tasks: associate
 Root: HKCU; Subkey: "Software\Classes\.md\OpenWithProgids"; ValueType: string; ValueName: "MarkdownLab.Document"; ValueData: ""; Flags: uninsdeletevalue; Tasks: associate
+Root: HKCU; Subkey: "Software\Classes\.markdown\OpenWithProgids"; ValueType: string; ValueName: "MarkdownLab.Document"; ValueData: ""; Flags: uninsdeletevalue; Tasks: associate
 [Run]
 Filename: "{app}\MarkdownLab.exe"; Description: "Abrir MarkdownLab"; Flags: nowait postinstall skipifsilent

@@ -97,3 +97,7 @@ Integrated spelling underlines and context suggestions using Windows WPF diction
 Windows x64 installer and portable ZIP built by CI. [Manual en español](docs/MANUAL.es.md). Tagged builds prepare draft releases for review. WebView2 Runtime required.
 
 Single-instance opening: double-clicking associated Markdown files forwards them to the running window, without duplicate tabs.
+
+## 1.6.1
+
+New flat MarkdownLab icon with nine ICO sizes, installer icon and document association; GitHub release update checker. Installer marker included.
