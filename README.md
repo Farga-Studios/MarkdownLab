@@ -79,3 +79,7 @@ Save/discard/cancel prompts, save all, individual tab close, new tab button, ato
 ## 1.5.0
 
 Custom vector toolbar icons (project-owned geometry), themed menus and selection, HTML/PDF export, Spanish spelling review dialog, basic language-aware code highlighting, focus mode, persistent theme and zoom. No new third-party dependencies.
+
+## 1.5.1
+
+Custom window chrome, bordered tabs, themed heading picker, reorganized file menu, resizable split view and Markdown guide. Integrated spelling and further visual refinement remain pending.

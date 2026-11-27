@@ -172,6 +172,8 @@ public partial class MainWindow : Window
         EditButton.Background = (Brush)Resources[mode == ViewMode.Edit ? "Accent" : "Panel"];
         SplitButton.Background = (Brush)Resources[mode == ViewMode.Split ? "Accent" : "Panel"];
         Preview.Visibility = !started || mode == ViewMode.Edit ? Visibility.Collapsed : Visibility.Visible;
+        SplitColumn.Width = new GridLength(mode == ViewMode.Split ? 5 : 0);
+        ReaderSplitter.Visibility = mode == ViewMode.Split ? Visibility.Visible : Visibility.Collapsed;
         EditorColumn.Width = mode == ViewMode.Read ? new GridLength(0) : new GridLength(1, GridUnitType.Star);
         PreviewColumn.Width = mode == ViewMode.Edit ? new GridLength(0) : new GridLength(1, GridUnitType.Star);
     }
@@ -331,7 +333,7 @@ public partial class MainWindow : Window
     private void CloseSearch_Click(object sender, RoutedEventArgs e) { SearchBar.Visibility = Visibility.Collapsed; Editor.Focus(); }
     private void Wrap_Click(object sender, RoutedEventArgs e) => Editor.WordWrap = !Editor.WordWrap;
     private void Sync_Click(object sender, RoutedEventArgs e) { syncScroll = !syncScroll; StatusText.Text = syncScroll ? "Desplazamiento sincronizado" : "Desplazamiento independiente"; SyncPreview(); }
-    private void Help_Click(object sender, RoutedEventArgs e) => MessageBox.Show("# Encabezado\n**Negrita** · *Cursiva* · ~~Tachado~~\n- Lista · 1. Numerada · - [ ] Tarea\n[Texto](URL) · ![Imagen](URL)\nCtrl+B / Ctrl+I · Alt+↑/↓ mover línea", "Sintaxis Markdown");
+    private void Help_Click(object sender, RoutedEventArgs e) => ShowMarkdownGuide();
     private void Heading_Changed(object sender, SelectionChangedEventArgs e)
     {
         if (HeadingPicker.SelectedItem is ComboBoxItem item && item.Tag is string tag) { ApplyFormat(tag); HeadingPicker.SelectedIndex = -1; }
