@@ -76,7 +76,7 @@ public partial class MainWindow
                 await client.RetainDownloadedAsync(manifest,path,store);
                 var transaction=journal.Begin(running.ToString(3),manifest.Version);
                 journal.Advance(transaction.Id,UpdatePhase.HandoffStarted);
-                await InstallerHandoff.LaunchAsync(new PreparedUpdate(manifest,path),folder,applicationUpdateSwitch:"/MARKDOWNLABUPDATE");
+                await InstallerHandoff.LaunchAsync(new PreparedUpdate(manifest,path),folder,applicationUpdateSwitch:"/MARKDOWNLABUPDATE",transactionId:transaction.Id);
                 Application.Current.Shutdown();
             }
             catch {workspaceTimer.Start();throw;}
@@ -91,6 +91,11 @@ public partial class MainWindow
         {
             if(MessageBox.Show(L.T("¿Cancelar la actualización preparada?"),"MarkdownLab",MessageBoxButton.YesNo)==MessageBoxResult.Yes)
                 recovery.CancelPrepared(t.Id,running);
+            return;
+        }
+        if(!new InstallerExitEvidence(folder).HasCompletion(t.Id))
+        {
+            UpdateNotice(L.T("No hay justificante de instalación completada. Se requiere recuperación manual."));
             return;
         }
         if(assessment.Status is RecoveryStatus.HealthCheckRequired or RecoveryStatus.RollbackHealthCheckRequired)
@@ -115,7 +120,7 @@ public partial class MainWindow
                 recovery.RequireRecovery(t.Id);
                 var update=await new RollbackManager(recovery,store).PrepareAsync(t.Id,running,true,true,folder);
                 recovery.MarkRollbackStarted(t.Id,running);
-                await InstallerHandoff.LaunchAsync(update,folder,applicationUpdateSwitch:"/MARKDOWNLABUPDATE");
+                await InstallerHandoff.LaunchAsync(update,folder,applicationUpdateSwitch:"/MARKDOWNLABUPDATE",transactionId:t.Id);
                 Application.Current.Shutdown();
             }
             catch {workspaceTimer.Start();throw;}
