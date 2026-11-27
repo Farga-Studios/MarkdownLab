@@ -45,7 +45,8 @@ jobs:
         run: gh release create "${{ github.ref_name }}" dist/MarkdownLab-portable-win-x64.zip dist/MarkdownLab-Setup-win-x64.exe --draft --generate-notes
 
       - name: Publish authorized v1.6.1 stable release
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.event.head_commit.message == 'release: publish MarkdownLab v1.6.1 stable'
+        if: >-
+          github.event_name == 'push' && github.ref == 'refs/heads/main' && github.event.head_commit.message == 'release: publish MarkdownLab v1.6.1 stable'
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
