@@ -17,7 +17,7 @@
   <ItemGroup>
     <Resource Include="Assets/MarkdownLab.ico" />
     <EmbeddedResource Include="Updates/PublicKey.pem" LogicalName="MarkdownLab.Updates.PublicKey.pem" Condition="Exists('Updates/PublicKey.pem')" />
-    <PackageReference Include="FargaStudios.Suite.Updater" Version="0.3.0-rc.1" />
+    <PackageReference Include="FargaStudios.Suite.Updater" Version="0.3.0-rc.2" />
     <PackageReference Include="AvalonEdit" Version="6.3.1.120" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
     <PackageReference Include="Markdig" Version="0.41.3" />
