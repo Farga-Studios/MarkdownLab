@@ -95,3 +95,5 @@ Integrated spelling underlines and context suggestions using Windows WPF diction
 ## 1.6.0 — Stable candidate
 
 Windows x64 installer and portable ZIP built by CI. [Manual en español](docs/MANUAL.es.md). Tagged builds prepare draft releases for review. WebView2 Runtime required.
+
+Single-instance opening: double-clicking associated Markdown files forwards them to the running window, without duplicate tabs.

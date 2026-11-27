@@ -22,3 +22,6 @@ Activa el corrector desde Ver o Configuración. Las sugerencias aparecen en el m
 
 ## Problemas y licencia
 Si no se ve la lectura, comprueba WebView2 y reinicia. Consulta Ayuda > Acerca de para ver la versión. Informa de errores en https://github.com/Sealsworn/MarkdownLab/issues. Licencia MIT; consulta LICENSE y las licencias de las dependencias.
+
+## Abrir desde Windows
+MarkdownLab usa una sola instancia por usuario y sesión. Si ya está abierto, los archivos .md y .markdown recibidos desde el explorador se abren en pestañas; si un archivo ya está abierto se selecciona su pestaña. Si la ventana está minimizada se restaura.

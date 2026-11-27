@@ -73,7 +73,18 @@ public partial class MainWindow : Window
             if (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift) && e.Key == Key.S) { e.Handled = true; SaveFile(true); }
             else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.F) { e.Handled = true; FocusSearch(); }
         };
-        if (Environment.GetCommandLineArgs().Skip(1).FirstOrDefault(p => File.Exists(p) && p.EndsWith(".md", StringComparison.OrdinalIgnoreCase)) is { } first) LoadFile(first);
+
+    }
+
+    internal void OpenExternalDocuments(IEnumerable<string> paths)
+    {
+        foreach (var path in paths)
+        {
+            if (File.Exists(path) && (path.EndsWith(".md", StringComparison.OrdinalIgnoreCase) || path.EndsWith(".markdown", StringComparison.OrdinalIgnoreCase)))
+                LoadFile(path);
+        }
+        if (WindowState == WindowState.Minimized) WindowState = WindowState.Normal;
+        Activate();
     }
 
     private bool ConfirmDiscard()
