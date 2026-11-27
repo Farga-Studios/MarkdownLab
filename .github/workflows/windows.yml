@@ -19,6 +19,9 @@ jobs:
         run: dotnet restore MarkdownLab/MarkdownLab.csproj -p:NuGetAudit=true -p:NuGetAuditMode=all -p:WarningsAsErrors=NU1903%3BNU1904
       - name: Build
         run: dotnet build MarkdownLab/MarkdownLab.csproj -c Release --no-restore
+      - name: Test offline update signing
+        shell: pwsh
+        run: ./scripts/Test-UpdateSigning.ps1
       - name: Publish portable
         run: dotnet publish MarkdownLab/MarkdownLab.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
       - name: Include documentation
