@@ -42,3 +42,41 @@ Root: HKCU; Subkey: "Software\Classes\.md\OpenWithProgids"; ValueType: string; V
 Root: HKCU; Subkey: "Software\Classes\.markdown\OpenWithProgids"; ValueType: string; ValueName: "MarkdownLab.Document"; ValueData: ""; Flags: uninsdeletevalue; Tasks: associate
 [Run]
 Filename: "{app}\MarkdownLab.exe"; Description: "{cm:LaunchProgram,MarkdownLab}"; Flags: nowait postinstall skipifsilent
+
+[Code]
+const
+  SYNCHRONIZE = $00100000;
+  WAIT_OBJECT_0 = 0;
+  ERROR_INVALID_PARAMETER = 87;
+
+function OpenProcess(dwDesiredAccess: LongWord; bInheritHandle: Boolean; dwProcessId: LongWord): THandle;
+  external 'OpenProcess@kernel32.dll stdcall';
+function WaitForSingleObject(hHandle: THandle; dwMilliseconds: LongWord): LongWord;
+  external 'WaitForSingleObject@kernel32.dll stdcall';
+function CloseHandle(hObject: THandle): Boolean;
+  external 'CloseHandle@kernel32.dll stdcall';
+function GetLastError(): LongWord;
+  external 'GetLastError@kernel32.dll stdcall';
+
+function InitializeSetup(): Boolean;
+var
+  PidText: String;
+  Pid: Integer;
+  Handle: THandle;
+begin
+  Result := True;
+  PidText := ExpandConstant('{param:WAITPID|0}');
+  Pid := StrToIntDef(PidText, -1);
+  if Pid = 0 then Exit;
+  if Pid < 0 then begin Result := False; Exit; end;
+  Handle := OpenProcess(SYNCHRONIZE, False, Pid);
+  if Handle = 0 then begin
+    Result := GetLastError() = ERROR_INVALID_PARAMETER;
+    Exit;
+  end;
+  try
+    Result := WaitForSingleObject(Handle, 30000) = WAIT_OBJECT_0;
+  finally
+    CloseHandle(Handle);
+  end;
+end;

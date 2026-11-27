@@ -15,8 +15,13 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
-      - name: Restore and build
-        run: dotnet build MarkdownLab/MarkdownLab.csproj -c Release
+      - name: Restore and audit
+        run: dotnet restore MarkdownLab/MarkdownLab.csproj -p:NuGetAudit=true -p:NuGetAuditMode=all -p:WarningsAsErrors=NU1903%3BNU1904
+      - name: Build
+        run: dotnet build MarkdownLab/MarkdownLab.csproj -c Release --no-restore
+      - name: Test offline update signing
+        shell: pwsh
+        run: ./scripts/Test-UpdateSigning.ps1
       - name: Publish portable
         run: dotnet publish MarkdownLab/MarkdownLab.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
       - name: Include documentation
@@ -32,15 +37,21 @@ jobs:
           if (!(Test-Path $iscc)) { choco install innosetup -y --no-progress; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE } }
           & $iscc installer/MarkdownLab.iss
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Prepare versioned installer and checksums
+        shell: pwsh
+        run: |
+          [xml]$project = Get-Content MarkdownLab/MarkdownLab.csproj
+          $version = $project.Project.PropertyGroup.Version
+          if ($version -notmatch '^\d+\.\d+\.\d+$') { throw 'Invalid version' }
+          $legacy = 'dist/MarkdownLab-Setup-win-x64.exe'
+          $versioned = "dist/MarkdownLab-$version-win-x64-setup.exe"
+          Copy-Item $legacy $versioned
+          if ((Get-FileHash $legacy).Hash -ne (Get-FileHash $versioned).Hash) { throw 'Installer alias mismatch' }
+          Get-ChildItem dist -File | ForEach-Object {
+            (Get-FileHash $_.FullName -Algorithm SHA256).Hash + '  ' + $_.Name | Set-Content ($_.FullName + '.sha256')
+          }
       - uses: actions/upload-artifact@v4
         with:
           name: MarkdownLab-win-x64
           path: dist/
           if-no-files-found: error
-      - name: Create draft release on tag
-        if: startsWith(github.ref, 'refs/tags/v')
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh release create "${{ github.ref_name }}" dist/MarkdownLab-portable-win-x64.zip dist/MarkdownLab-Setup-win-x64.exe --draft --generate-notes
-
