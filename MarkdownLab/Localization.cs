@@ -185,6 +185,14 @@ internal static class L
         ("![imagen](URL)", "![image](URL)"),
         ("Markdown (*.md;*.markdown)|*.md;*.markdown|Todos los archivos (*.*)|*.*", "Markdown (*.md;*.markdown)|*.md;*.markdown|All files (*.*)|*.*"),
         ("Imágenes|*.png;*.jpg;*.jpeg;*.gif;*.webp;*.bmp", "Images|*.png;*.jpg;*.jpeg;*.gif;*.webp;*.bmp"),
+        ("La firma de actualizaciones aún no está configurada.", "Update signing is not configured yet."),
+        ("Una actualización requiere recuperación.", "An update requires recovery."),
+        ("Registro de actualización no válido. Consulta la documentación de recuperación.", "Invalid update journal. See the recovery documentation."),
+        ("¿Cancelar la actualización preparada?", "Cancel the prepared update?"),
+        ("No hay justificante de instalación completada. Se requiere recuperación manual.", "No installation completion receipt. Manual recovery is required."),
+        ("¿Ha terminado el instalador y has comprobado que puedes abrir, editar y guardar un documento de prueba? Sí: confirmar. No: solicitar recuperación. Cancelar: más tarde.", "Has the installer exited, and have you tested opening, editing and saving a sample document? Yes: confirm. No: request recovery. Cancel: later."),
+        ("¿Restaurar la versión anterior? Confirma que el instalador ha terminado, que tienes copias de seguridad y que tus datos son compatibles con la versión anterior. Se requiere un instalador firmado conservado.", "Restore the previous version? Confirm that the installer has exited, you have backups and your data is compatible with the previous version. A retained signed installer is required."),
+        ("Actualización interrumpida. No borres el registro. Consulta la documentación de recuperación manual.", "Update interrupted. Do not delete the journal. See the manual recovery documentation."),
     };
     private static readonly Dictionary<string,string> English=Strings.ToDictionary(p=>p.Es,p=>p.En,StringComparer.Ordinal);
     public static string T(string spanish)=>!IsSpanish&&English.TryGetValue(spanish,out var translated)?translated:spanish;
