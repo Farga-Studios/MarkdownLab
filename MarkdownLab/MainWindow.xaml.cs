@@ -33,6 +33,7 @@ public partial class MainWindow : Window
 
     public MainWindow()
     {
+        L.Apply(System.Windows.Application.Current.Resources);
         InitializeComponent();
         InitSpelling();
         InitWorkspace();
@@ -59,12 +60,12 @@ public partial class MainWindow : Window
                         try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(link.AbsoluteUri) { UseShellExecute = true }); } catch { } };
                 Preview.CoreWebView2.NavigationCompleted += (_, e) => {
                     if (!e.IsSuccess && e.WebErrorStatus != Microsoft.Web.WebView2.Core.CoreWebView2WebErrorStatus.OperationCanceled)
-                        StatusText.Text = "Error de vista previa: " + e.WebErrorStatus;
+                        StatusText.Text = L.T("Error de vista previa: ") + e.WebErrorStatus;
                     else if (e.IsSuccess) SyncPreview();
                 };
                 Preview.CoreWebView2.NewWindowRequested += (_, e) => { e.Handled = true; };
                 ready = true; RefreshPreview();
-            } catch (Exception ex) { StatusText.Text = "Vista previa no disponible: " + ex.Message; mode = ViewMode.Edit; ApplyMode(); }
+            } catch (Exception ex) { StatusText.Text = L.T("Vista previa no disponible: ") + ex.Message; mode = ViewMode.Edit; ApplyMode(); }
         };
         CommandBindings.Add(new CommandBinding(ApplicationCommands.Open, (_, _) => OpenFile()));
         CommandBindings.Add(new CommandBinding(ApplicationCommands.Save, (_, _) => SaveFile()));
@@ -91,7 +92,7 @@ public partial class MainWindow : Window
     private bool ConfirmDiscard()
     {
         if (!dirty) return true;
-        return MessageBox.Show("Hay cambios sin guardar. ¿Continuar y descartarlos?", "MarkdownLab", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes;
+        return MessageBox.Show(L.T("Hay cambios sin guardar. ¿Continuar y descartarlos?"), "MarkdownLab", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes;
     }
 
     private void OpenFile()
@@ -112,7 +113,7 @@ public partial class MainWindow : Window
             Remember(path);
 
         }
-        catch (Exception ex) { MessageBox.Show(ex.Message, "No se pudo abrir", MessageBoxButton.OK, MessageBoxImage.Error); }
+        catch (Exception ex) { MessageBox.Show(ex.Message, L.T("No se pudo abrir"), MessageBoxButton.OK, MessageBoxImage.Error); }
         finally { updating = false; }
     }
 
@@ -128,21 +129,21 @@ public partial class MainWindow : Window
         }
         try
         {
-            if (documents.Any(d => !ReferenceEquals(d,current) && string.Equals(d.Path,Path.GetFullPath(path),StringComparison.OrdinalIgnoreCase))) { MessageBox.Show("El archivo ya está abierto en otra pestaña."); return false; }
+            if (documents.Any(d => !ReferenceEquals(d,current) && string.Equals(d.Path,Path.GetFullPath(path),StringComparison.OrdinalIgnoreCase))) { MessageBox.Show(L.T("El archivo ya está abierto en otra pestaña.")); return false; }
             WriteDocumentSafely(path, Editor.Text);
             filePath = path; dirty = false; CaptureTab(); Remember(path); WriteRecovery(); RefreshPreview();
             Title = $"MarkdownLab — {Path.GetFileName(path)}";
             StatusText.Text = path;
             return true;
         }
-        catch (Exception ex) { MessageBox.Show(ex.Message, "No se pudo guardar", MessageBoxButton.OK, MessageBoxImage.Error); return false; }
+        catch (Exception ex) { MessageBox.Show(ex.Message, L.T("No se pudo guardar"), MessageBoxButton.OK, MessageBoxImage.Error); return false; }
     }
 
     private void RefreshPreview()
     {
         var markdown = Editor.Text;
-        DocumentName.Text = (filePath is null ? "Sin título" : Path.GetFileName(filePath)) + (dirty ? " *" : "");
-        Stats.Text = $"{Regex.Matches(markdown, @"\S+").Count} palabras   ·   {markdown.Length} caracteres   ·   UTF-8   ·   {zoom:P0}";
+        DocumentName.Text = (filePath is null ? L.T("Sin título") : Path.GetFileName(filePath)) + (dirty ? " *" : "");
+        Stats.Text = $"{Regex.Matches(markdown, @"\S+").Count} {L.T("palabras")}   ·   {markdown.Length} {L.T("caracteres")}   ·   UTF-8   ·   {zoom:P0}";
         var html = HighlightCode(EmbedLocalImages(Markdown.ToHtml(markdown, pipeline)));
         headings.Clear();
         // Explicit anchors make the outline work even with duplicate heading titles.
@@ -164,7 +165,7 @@ public partial class MainWindow : Window
         lastHtml = document;
         if (ready) {
             try { Preview.NavigateToString(document); }
-            catch (Exception ex) { StatusText.Text = "Error de vista previa: " + ex.Message; }
+            catch (Exception ex) { StatusText.Text = L.T("Error de vista previa: ") + ex.Message; }
         }
     }
 
@@ -188,7 +189,7 @@ public partial class MainWindow : Window
         if (updating || !IsInitialized) return;
         dirty = true;
         CaptureTab();
-        Title = $"MarkdownLab — {(filePath is null ? "Sin título" : Path.GetFileName(filePath))} *";
+        Title = $"MarkdownLab — {(filePath is null ? L.T("Sin título") : Path.GetFileName(filePath))} *";
         refreshTimer.Stop(); refreshTimer.Start();
     }
 
@@ -217,7 +218,7 @@ public partial class MainWindow : Window
         var index = Editor.Text.IndexOf(term, start, StringComparison.OrdinalIgnoreCase);
         if (index < 0) index = Editor.Text.IndexOf(term, 0, StringComparison.OrdinalIgnoreCase);
         if (index >= 0) { Editor.Focus(); Editor.Select(index, term.Length); Editor.ScrollToLine(Editor.Document.GetLineByOffset(index).LineNumber); }
-        else StatusText.Text = "Texto no encontrado";
+        else StatusText.Text = L.T("Texto no encontrado");
     }
 
     private void Theme_Click(object sender, RoutedEventArgs e)
@@ -325,12 +326,12 @@ public partial class MainWindow : Window
         var panel = new StackPanel { Margin = new Thickness(24), Width = 340 };
         panel.Children.Add(new Image { Source = Icon, Width = 64, Height = 64 });
         panel.Children.Add(new TextBlock { Text = "MarkdownLab", FontSize = 26, FontWeight = FontWeights.SemiBold, TextAlignment = TextAlignment.Center, Margin = new Thickness(0,12,0,4) });
-        panel.Children.Add(new TextBlock { Text = $"Versión {version}\nDesarrollado por Sealsworn\nLicencia MIT\nLector y editor Markdown para Windows", TextAlignment = TextAlignment.Center, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0,4,0,16) });
-        var link = new Button { Content = "Repositorio oficial · GitHub" };
+        panel.Children.Add(new TextBlock { Text = $"{L.T("Versión")} {version}\n{L.T("Desarrollado por Sealsworn")}\n{L.T("Licencia MIT")}\n{L.T("Lector y editor Markdown para Windows")}", TextAlignment = TextAlignment.Center, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0,4,0,16) });
+        var link = new Button { Content = L.T("Repositorio oficial · GitHub") };
         panel.Children.Add(link);
-        var close = new Button { Content = "Cerrar", IsCancel = true, IsDefault = true };
+        var close = new Button { Content = L.T("Cerrar"), IsCancel = true, IsDefault = true };
         panel.Children.Add(close);
-        var dialog = Dialog("Acerca de MarkdownLab", panel);
+        var dialog = Dialog(L.T("Acerca de MarkdownLab"), panel);
         link.Click += (_, _) => { try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("https://github.com/Sealsworn/MarkdownLab") { UseShellExecute = true }); } catch (Exception ex) { MessageBox.Show(dialog, ex.Message); } };
         dialog.ShowDialog();
     }
@@ -338,7 +339,7 @@ public partial class MainWindow : Window
     private void Exit_Click(object sender, RoutedEventArgs e) => Close();
     private void CloseSearch_Click(object sender, RoutedEventArgs e) { SearchBar.Visibility = Visibility.Collapsed; Editor.Focus(); }
     private void Wrap_Click(object sender, RoutedEventArgs e) => Editor.WordWrap = !Editor.WordWrap;
-    private void Sync_Click(object sender, RoutedEventArgs e) { syncScroll = !syncScroll; StatusText.Text = syncScroll ? "Desplazamiento sincronizado" : "Desplazamiento independiente"; SyncPreview(); }
+    private void Sync_Click(object sender, RoutedEventArgs e) { syncScroll = !syncScroll; StatusText.Text = syncScroll ? L.T("Desplazamiento sincronizado") : L.T("Desplazamiento independiente"); SyncPreview(); }
     private void Help_Click(object sender, RoutedEventArgs e) => ShowMarkdownGuide();
     private void Heading_Changed(object sender, SelectionChangedEventArgs e)
     {
@@ -406,11 +407,11 @@ public partial class MainWindow : Window
         var panel = new StackPanel { Margin = new Thickness(16), Width = 360 };
         var alt = new TextBox { Text = Editor.SelectedText, Margin = new Thickness(0,4,0,8) };
         var url = new TextBox { Margin = new Thickness(0,4,0,8) };
-        panel.Children.Add(new TextBlock { Text = "Texto alternativo" }); panel.Children.Add(alt);
-        panel.Children.Add(new TextBlock { Text = "URL o ruta de imagen" }); panel.Children.Add(url);
-        var browse = new Button { Content = "Elegir del dispositivo…" }; panel.Children.Add(browse);
-        var ok = new Button { Content = "Insertar", IsDefault = true }; panel.Children.Add(ok);
-        var dialog = Dialog("Insertar imagen", panel);
+        panel.Children.Add(new TextBlock { Text = L.T("Texto alternativo") }); panel.Children.Add(alt);
+        panel.Children.Add(new TextBlock { Text = L.T("URL o ruta de imagen") }); panel.Children.Add(url);
+        var browse = new Button { Content = L.T("Elegir del dispositivo…") }; panel.Children.Add(browse);
+        var ok = new Button { Content = L.T("Insertar"), IsDefault = true }; panel.Children.Add(ok);
+        var dialog = Dialog(L.T("Insertar imagen"), panel);
         browse.Click += (_, _) => { var picker = new OpenFileDialog { Filter = "Imágenes|*.png;*.jpg;*.jpeg;*.gif;*.webp;*.bmp" }; if (picker.ShowDialog(dialog) == true) url.Text = picker.FileName; };
         ok.Click += (_, _) => { if (!string.IsNullOrWhiteSpace(url.Text)) dialog.DialogResult = true; };
         if (dialog.ShowDialog() != true) return;
@@ -422,13 +423,13 @@ public partial class MainWindow : Window
     private void InsertTable()
     {
         var panel = new StackPanel { Margin = new Thickness(16) };
-        var label = new TextBlock { Text = "Elige columnas × filas (incluye encabezado)" }; panel.Children.Add(label);
+        var label = new TextBlock { Text = L.T("Elige columnas × filas (incluye encabezado)") }; panel.Children.Add(label);
         var grid = new System.Windows.Controls.Primitives.UniformGrid { Columns = 8, Rows = 6 }; panel.Children.Add(grid);
-        var dialog = Dialog("Insertar tabla", panel);
+        var dialog = Dialog(L.T("Insertar tabla"), panel);
         var cells = new List<(Button Button,int Row,int Col)>();
         for (int r=1;r<=6;r++) for(int c=1;c<=8;c++) {
             int rr=r, cc=c; var b=new Button { Width=32, Height=32, Content="·", Margin=new Thickness(2) }; cells.Add((b,r,c)); grid.Children.Add(b);
-            b.MouseEnter += (_,_) => { label.Text=$"{cc} columnas × {rr} filas"; foreach(var cell in cells) cell.Button.Background=(Brush)Resources[cell.Row<=rr && cell.Col<=cc ? "Accent" : "Surface"]; };
+            b.MouseEnter += (_,_) => { label.Text=$"{cc} {L.T("columnas")} × {rr} {L.T("filas")}"; foreach(var cell in cells) cell.Button.Background=(Brush)Resources[cell.Row<=rr && cell.Col<=cc ? "Accent" : "Surface"]; };
             b.Click += (_,_) => { dialog.Close(); var header="| "+string.Join(" | ",Enumerable.Range(1,cc).Select(i=>$"Columna {i}"))+" |"; var divider="| "+string.Join(" | ",Enumerable.Repeat("---",cc))+" |"; var row="| "+string.Join(" | ",Enumerable.Repeat(" ",cc))+" |"; InsertText("\n"+header+"\n"+divider+"\n"+string.Concat(Enumerable.Repeat(row+"\n",rr-1))); };
         }
         dialog.ShowDialog();

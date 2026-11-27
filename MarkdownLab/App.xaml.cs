@@ -20,6 +20,7 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        L.Apply(Resources);
         var sid = WindowsIdentity.GetCurrent().User?.Value ?? Environment.UserName;
         var scope = "Sealsworn.MarkdownLab." + sid + "." + Process.GetCurrentProcess().SessionId;
         pipeName = scope;
@@ -43,7 +44,7 @@ public partial class App : Application
             }
             catch (Exception ex)
             {
-                MessageBox.Show("No se pudo contactar con la ventana abierta de MarkdownLab. No se ha abierto una segunda instancia.\n" + ex.Message, "MarkdownLab");
+                MessageBox.Show(L.T("No se pudo contactar con la ventana abierta de MarkdownLab. No se ha abierto una segunda instancia.")+"\n" + ex.Message, "MarkdownLab");
                 Shutdown(1);
                 return;
             }

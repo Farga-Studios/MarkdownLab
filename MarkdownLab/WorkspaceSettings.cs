@@ -8,6 +8,7 @@ public partial class MainWindow
 {
     private sealed class Preferences
     {
+        public string? UiLanguage {get;set;}
         public bool AutoSave {get;set;}
         public bool CheckUpdatesOnStartup {get;set;} = true;
         public bool SpellEnabled {get;set;} = false;
@@ -24,6 +25,7 @@ public partial class MainWindow
     private void LoadSettings()
     {
         try {settings=JsonSerializer.Deserialize<Preferences>(File.ReadAllText(Path.Combine(WorkspaceFolder,"settings.json")))??new();}catch{}
+        L.SetLanguage(settings.UiLanguage); L.Apply(System.Windows.Application.Current.Resources);
         workspaceTimer.Interval=TimeSpan.FromSeconds(Math.Clamp(settings.Interval,15,300));
         Loaded += (_,_)=>{light=settings.Light;zoom=Math.Clamp(settings.Zoom,.6,2.5);Editor.FontSize=15*zoom;Editor.WordWrap=settings.Wrap;SpellMenu.IsChecked=settings.SpellEnabled;ApplyTheme();QueueSpelling();};
     }
@@ -34,15 +36,16 @@ public partial class MainWindow
         panel.Children.Add(tabs);
         StackPanel Page(string title){var p=new StackPanel{Margin=new Thickness(12)};tabs.Items.Add(new TabItem{Header=title,Content=p});return p;}
         CheckBox Check(StackPanel p,string label,bool value){var c=new CheckBox{Content=label,IsChecked=value,Margin=new Thickness(0,7,0,7),Foreground=(System.Windows.Media.Brush)Resources["Ink"]};p.Children.Add(c);return c;}
-        var general=Page("General");var updates=Check(general,"Buscar actualizaciones al iniciar",settings.CheckUpdatesOnStartup);var restore=Check(general,"Restaurar pestañas al iniciar",settings.RestoreTabs);
-        var appearance=Page("Apariencia");var bright=Check(appearance,"Tema claro",light);
-        var edit=Page("Editor");var wrap=Check(edit,"Ajustar líneas al ancho",Editor.WordWrap);var spell=Check(edit,"Corrector ortográfico integrado",settings.SpellEnabled);
-        edit.Children.Add(new TextBlock{Text="Idioma del corrector"});var language=new ComboBox{ItemsSource=new[]{"es-ES","en-US","en-GB","ca-ES"},SelectedItem=settings.SpellLanguage};edit.Children.Add(language);
-        var save=Page("Guardado");var auto=Check(save,"Guardar automáticamente archivos originales",settings.AutoSave);var recovery=Check(save,"Crear copias de recuperación",settings.Recovery);
-        save.Children.Add(new TextBlock{Text="Intervalo (segundos)"});var interval=new ComboBox{ItemsSource=new[]{15,30,60,300},SelectedItem=settings.Interval};save.Children.Add(interval);
-        var ok=new Button{Content="Guardar configuración",IsDefault=true,Margin=new Thickness(0,12,0,0)};panel.Children.Add(ok);
-        var dialog=Dialog("Configuración",panel);ok.Click+=(_,_)=>dialog.DialogResult=true;
+        var general=Page(L.T("General"));general.Children.Add(new TextBlock{Text=L.T("Idioma de la interfaz")});var uiLanguage=new ComboBox{ItemsSource=new[]{"Español","English"},SelectedIndex=L.IsSpanish?0:1};general.Children.Add(uiLanguage);var updates=Check(general,L.T("Buscar actualizaciones al iniciar"),settings.CheckUpdatesOnStartup);var restore=Check(general,L.T("Restaurar pestañas al iniciar"),settings.RestoreTabs);
+        var appearance=Page(L.T("Apariencia"));var bright=Check(appearance,L.T("Tema claro"),light);
+        var edit=Page("Editor");var wrap=Check(edit,L.T("Ajustar líneas al ancho"),Editor.WordWrap);var spell=Check(edit,L.T("Corrector ortográfico integrado"),settings.SpellEnabled);
+        edit.Children.Add(new TextBlock{Text=L.T("Idioma del corrector")});var language=new ComboBox{ItemsSource=new[]{"es-ES","en-US","en-GB","ca-ES"},SelectedItem=settings.SpellLanguage};edit.Children.Add(language);
+        var save=Page(L.T("Guardado"));var auto=Check(save,L.T("Guardar automáticamente archivos originales"),settings.AutoSave);var recovery=Check(save,L.T("Crear copias de recuperación"),settings.Recovery);
+        save.Children.Add(new TextBlock{Text=L.T("Intervalo (segundos)")});var interval=new ComboBox{ItemsSource=new[]{15,30,60,300},SelectedItem=settings.Interval};save.Children.Add(interval);
+        var ok=new Button{Content=L.T("Guardar configuración"),IsDefault=true,Margin=new Thickness(0,12,0,0)};panel.Children.Add(ok);
+        var dialog=Dialog(L.T("Configuración"),panel);ok.Click+=(_,_)=>dialog.DialogResult=true;
         if(dialog.ShowDialog()!=true)return;
+        settings.UiLanguage=uiLanguage.SelectedIndex==0?"es":"en"; L.SetLanguage(settings.UiLanguage);L.Apply(System.Windows.Application.Current.Resources);foreach(var d in documents)d.Notify();Title=current==null?"MarkdownLab":"MarkdownLab — "+current.Label;RefreshPreview();
         settings.CheckUpdatesOnStartup=updates.IsChecked==true;settings.AutoSave=auto.IsChecked==true;settings.Recovery=recovery.IsChecked==true;settings.RestoreTabs=restore.IsChecked==true;settings.Interval=interval.SelectedItem is int n?n:30;
         settings.SpellEnabled=spell.IsChecked==true;settings.SpellLanguage=language.SelectedItem as string??"es-ES";settings.Wrap=wrap.IsChecked==true;Editor.WordWrap=settings.Wrap;light=bright.IsChecked==true;SpellMenu.IsChecked=settings.SpellEnabled;
         workspaceTimer.Interval=TimeSpan.FromSeconds(settings.Interval);ApplyTheme();PersistAppearance();QueueSpelling();
@@ -60,17 +63,17 @@ public partial class MainWindow
         if(settings.AutoSave)foreach(var d in documents.Where(t=>t.Dirty && t.Path!=null).ToArray())
         {
             try{WriteDocumentSafely(d.Path!,d.Text);d.Dirty=false;d.Notify();if(ReferenceEquals(current,d)){dirty=false;Title="MarkdownLab — "+d.Label;RefreshPreview();}}
-            catch(Exception ex){StatusText.Text="Autoguardado: "+ex.Message;}
+            catch(Exception ex){StatusText.Text=L.T("Autoguardado: ")+ex.Message;}
         }
         WriteRecovery();
     }
     private int AskSave(string name,bool multiple)
     {
         int answer=0;var panel=new StackPanel{Margin=new Thickness(20),Width=380};
-        panel.Children.Add(new TextBlock{Text="¿Quieres guardar los cambios?",FontSize=19,FontWeight=FontWeights.SemiBold});
+        panel.Children.Add(new TextBlock{Text=L.T("¿Quieres guardar los cambios?"),FontSize=19,FontWeight=FontWeights.SemiBold});
         panel.Children.Add(new TextBlock{Text=name,TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,8,0,16)});
         var buttons=new WrapPanel();panel.Children.Add(buttons);var dialog=Dialog("MarkdownLab",panel);
-        foreach(var pair in multiple?new[]{("Guardar",1),("Guardar todos",3),("No guardar",2),("Cancelar",0)}:new[]{("Guardar",1),("No guardar",2),("Cancelar",0)})
+        foreach(var pair in multiple?new[]{(L.T("Guardar"),1),(L.T("Guardar todos"),3),(L.T("No guardar"),2),(L.T("Cancelar"),0)}:new[]{(L.T("Guardar"),1),(L.T("No guardar"),2),(L.T("Cancelar"),0)})
         {var b=new Button{Content=pair.Item1,Margin=new Thickness(2),IsDefault=pair.Item2==1,IsCancel=pair.Item2==0};buttons.Children.Add(b);b.Click+=(_,_)=>{answer=pair.Item2;dialog.Close();};}
         dialog.ShowDialog();return answer;
     }
