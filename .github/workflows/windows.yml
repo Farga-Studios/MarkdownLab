@@ -32,6 +32,28 @@ jobs:
           if (!(Test-Path $iscc)) { choco install innosetup -y --no-progress; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE } }
           & $iscc installer/MarkdownLab.iss
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Prepare versioned installer and checksums
+        shell: pwsh
+        run: |
+          [xml]$project = Get-Content MarkdownLab/MarkdownLab.csproj
+          $version = $project.Project.PropertyGroup.Version
+          if ($version -notmatch '^\d+\.\d+\.\d+
+        with:
+          name: MarkdownLab-win-x64
+          path: dist/
+          if-no-files-found: error
+      - name: Create draft release on tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${{ github.ref_name }}" dist/* --draft --generate-notes
+
+) { throw 'Invalid version' }
+          Copy-Item dist/MarkdownLab-Setup-win-x64.exe "dist/MarkdownLab-$version-win-x64-setup.exe"
+          Get-ChildItem dist -File | ForEach-Object {
+            (Get-FileHash $_.FullName -Algorithm SHA256).Hash + '  ' + $_.Name | Set-Content ($_.FullName + '.sha256')
+          }
       - uses: actions/upload-artifact@v4
         with:
           name: MarkdownLab-win-x64
