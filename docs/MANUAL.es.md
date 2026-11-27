@@ -28,3 +28,6 @@ MarkdownLab usa una sola instancia por usuario y sesión. Si ya está abierto, l
 
 ## Actualizaciones
 Ayuda > Buscar actualizaciones consulta la última release estable de GitHub. La comprobación al iniciar se puede desactivar en General. En instalaciones normales descarga el instalador previa confirmación y comprueba su SHA-256 publicado por GitHub; guarda los documentos antes de ejecutarlo. En modo portátil abre la página de descarga para actualizar manualmente.
+
+## Idioma de la interfaz
+Desde la 1.7.0, en Herramientas > Configuración > General, selecciona Español o English. El idioma del corrector se configura por separado en Editor.

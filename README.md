@@ -1,103 +1,40 @@
+<p align="center"><img src="MarkdownLab/Assets/MarkdownLab.svg" width="96" alt="MarkdownLab logo"></p>
+
 # MarkdownLab
 
-A lightweight Markdown reader and editor for Windows, featuring live preview, split view, dark mode, and document navigation.
+A lightweight, modern Markdown reader and editor for Windows. Developed by **Sealsworn**.
 
-## Features
+[Español](README.es.md) · [Releases](https://github.com/Sealsworn/MarkdownLab/releases) · [User guide](docs/MANUAL.en.md) · [Changelog](CHANGELOG.md)
 
-- Read, edit, or split-screen Markdown with live preview
-- Tables, task lists, fenced code, and images via Markdig
-- Document outline, case-insensitive find, and zoom
-- Light/dark preview and editor
-- Open and save UTF-8 Markdown documents
-- Drag and drop an `.md` file into the window
-- Open a document from the command line
+![MIT](https://img.shields.io/badge/license-MIT-blue) ![Windows](https://img.shields.io/badge/Windows-x64-blue) ![Build](https://github.com/Sealsworn/MarkdownLab/actions/workflows/windows.yml/badge.svg)
 
 ## Download
 
-In [Actions](../../actions/workflows/windows.yml), open a successful **Windows build**, then download the `MarkdownLab-win-x64` artifact. Extract it and run `MarkdownLab.exe`.
+Visit [GitHub Releases](https://github.com/Sealsworn/MarkdownLab/releases/latest) for the Windows x64 installer or portable ZIP. Microsoft Edge WebView2 Runtime is required; .NET is bundled. The English interface is introduced in 1.7.0; the current public release may be older.
 
-## Build locally
+## Features
 
-Requires Visual Studio 2022 with .NET desktop development workload, or .NET 8 SDK on Windows.
+- Read, edit and split view with live preview, outline, zoom and syntax highlighting.
+- Multiple tabs, recent files, folder browsing, find and replace.
+- Formatting toolbar, tables, images, links, lists and tasks.
+- Optional autosave, recovery snapshots and session restoration.
+- Light and dark themes, focus mode, spelling suggestions using Windows dictionaries.
+- HTML and PDF export; local image support.
+- Single-instance file opening and optional Windows file association.
+- GitHub release update checks with SHA-256 installer verification.
+- Spanish and English interface in 1.7.0; spelling language is independent.
+
+## Build
+
+On Windows with .NET 8 SDK:
 
 ```powershell
 dotnet run --project MarkdownLab/MarkdownLab.csproj
-```
-
-To publish a portable, self-contained Windows executable:
-
-```powershell
 dotnet publish MarkdownLab/MarkdownLab.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
 ```
 
-## Shortcuts
-
-- `Ctrl+O`: Open
-- `Ctrl+S`: Save
-- Press Enter in search to find next occurrence
-
-## Scope
-
-MarkdownLab 1.1 focuses on reading and editing. PDF export, plugins, and cloud synchronization are intentionally out of scope.
-
-## Security note
-
-Only open Markdown files from sources you trust. The preview uses Microsoft Edge WebView2 Runtime (required on Windows). Raw HTML is disabled and navigation is blocked. Relative local images may be limited by WebView2 security policies.
+The installer uses Inno Setup. CI builds both packages.
 
 ## License
 
-[MIT](LICENSE). Developed by Sealsworn.
-
-## Version 1.1
-
-Modern toolbar, welcome screen, resizable outline, AvalonEdit line numbers, document statistics and application icon.
-
-## Version 1.2
-
-Save As (Ctrl+Shift+S), editor context menu, Ctrl+F, and Markdown formatting toolbar with syntax tooltips in edit and split modes.
-
-## 1.3.0
-
-Desktop menus, heading selector, smart lists, image picker (URL or local), visual table picker, Ctrl+B/I, Alt+Up/Down, word wrap, collapsible search, approximate editor-to-preview scroll sync. Local raster preview embeds images up to 750 KB each; WebView2 HTML size limits still apply.
-
-## 1.3.1
-
-About dialog with automatic assembly version, organization, license and repository link.
-
-## 1.4.0
-
-Document tabs, recent files, folder browsing, recovery snapshots, replace all, image drag/drop and file-based preview. Recovery snapshots every 15 seconds; original files are not overwritten automatically.
-
-## 1.4.1
-
-Restore NavigateToString preview; serve local raster images through a dedicated WebView2 virtual host and local image cache.
-
-## 1.4.2
-
-Save/discard/cancel prompts, save all, individual tab close, new tab button, atomic file replacement, configurable recovery and opt-in autosave, session restoration. Autosave only affects named documents.
-
-## 1.5.0
-
-Custom vector toolbar icons (project-owned geometry), themed menus and selection, HTML/PDF export, Spanish spelling review dialog, basic language-aware code highlighting, focus mode, persistent theme and zoom. No new third-party dependencies.
-
-## 1.5.1
-
-Custom window chrome, bordered tabs, themed heading picker, reorganized file menu, resizable split view and Markdown guide. Integrated spelling and further visual refinement remain pending.
-
-## 1.5.2
-
-Shared themed application dialogs, custom dialog title bars, red close-button hover and improved Markdown syntax contrast. Native system file pickers and message boxes retain Windows styling.
-
-## 1.5.3
-
-Integrated spelling underlines and context suggestions using Windows WPF dictionaries (availability varies), categorized preferences, recent documents on welcome screen and vector welcome logo. Spelling is opt-in and skips common code/URL patterns; limited to 150,000 characters and 1,000 errors per pass.
-
-## 1.6.0 — Stable candidate
-
-Windows x64 installer and portable ZIP built by CI. [Manual en español](docs/MANUAL.es.md). Tagged builds prepare draft releases for review. WebView2 Runtime required.
-
-Single-instance opening: double-clicking associated Markdown files forwards them to the running window, without duplicate tabs.
-
-## 1.6.1
-
-New flat MarkdownLab icon with nine ICO sizes, installer icon and document association; GitHub release update checker. Installer marker included.
+[MIT](LICENSE). Built with WPF, AvalonEdit, Markdig and WebView2. Only open documents from trusted sources; raw HTML is disabled in preview.
