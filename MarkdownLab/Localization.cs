@@ -193,6 +193,7 @@ internal static class L
         ("¿Ha terminado el instalador y has comprobado que puedes abrir, editar y guardar un documento de prueba? Sí: confirmar. No: solicitar recuperación. Cancelar: más tarde.", "Has the installer exited, and have you tested opening, editing and saving a sample document? Yes: confirm. No: request recovery. Cancel: later."),
         ("¿Restaurar la versión anterior? Confirma que el instalador ha terminado, que tienes copias de seguridad y que tus datos son compatibles con la versión anterior. Se requiere un instalador firmado conservado.", "Restore the previous version? Confirm that the installer has exited, you have backups and your data is compatible with the previous version. A retained signed installer is required."),
         ("Actualización interrumpida. No borres el registro. Consulta la documentación de recuperación manual.", "Update interrupted. Do not delete the journal. See the manual recovery documentation."),
+        ("El canal de actualizaciones no está disponible. No se ha podido verificar si hay una nueva versión.", "The update channel is unavailable. Could not verify whether a newer version exists."),
     };
     private static readonly Dictionary<string,string> English=Strings.ToDictionary(p=>p.Es,p=>p.En,StringComparer.Ordinal);
     public static string T(string spanish)=>!IsSpanish&&English.TryGetValue(spanish,out var translated)?translated:spanish;
