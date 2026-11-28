@@ -1,4 +1,4 @@
-#define AppVersion "1.7.0"
+#define AppVersion "1.7.4"
 [Setup]
 AppId=Sealsworn.MarkdownLab
 AppName=MarkdownLab
@@ -79,4 +79,19 @@ begin
   finally
     CloseHandle(Handle);
   end;
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+var
+  Id, Receipt: String;
+  I: Integer;
+begin
+  if CurStep <> ssDone then Exit;
+  Id := ExpandConstant('{param:RECOVERYID|}');
+  if Length(Id) <> 32 then Exit;
+  for I := 1 to Length(Id) do
+    if Pos(Id[I], '0123456789abcdef') = 0 then Exit;
+  Receipt := AddBackslash(ExtractFileDir(ExpandConstant('{srcexe}'))) + 'installer-' + Id + '.receipt';
+  if not SaveStringToFile(Receipt, 'completed:' + Id, False) then
+    Log('Unable to persist recovery completion receipt');
 end;
