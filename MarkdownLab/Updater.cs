@@ -40,7 +40,15 @@ public partial class MainWindow
                     return;
                 }
             }
-            var manifest=await client.CheckAsync(running);
+            UpdateManifest? manifest;
+            try { manifest=await client.CheckAsync(running); }
+            catch(HttpRequestException ex) when(ex.StatusCode==System.Net.HttpStatusCode.NotFound)
+            {
+                var message=L.T("El canal de actualizaciones no está disponible. No se ha podido verificar si hay una nueva versión.");
+                StatusText.Text=message;
+                if(manual)UpdateNotice(message);
+                return;
+            }
             if(manifest is null){if(manual)UpdateNotice(L.T("Ya tienes la última versión."));return;}
             var tag="v"+manifest.Version;
             var installed=InstallerHandoff.IsInstalled(AppContext.BaseDirectory,"Sealsworn.MarkdownLab");
