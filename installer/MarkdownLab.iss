@@ -1,4 +1,4 @@
-#define AppVersion "1.7.3"
+#define AppVersion "1.7.4"
 [Setup]
 AppId=Sealsworn.MarkdownLab
 AppName=MarkdownLab
