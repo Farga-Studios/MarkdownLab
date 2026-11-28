@@ -200,8 +200,8 @@ internal static class L
         ("Restaurar versión anterior", "Restore previous version"),
         ("Recuperación de actualizaciones", "Update recovery"),
         ("Más tarde", "Later"),
-        ("Solo si cancelaste antes de copiar archivos: confirma que el instalador está cerrado y que has probado correctamente la apertura, edición y guardado con la versión anterior. Si comenzó la copia o tienes dudas, utiliza la recuperación manual.", "Only if you cancelled before files were copied: confirm that the installer has exited and you successfully tested opening, editing and saving with the previous version. If copying started or you are unsure, use manual recovery."),
-        ("Resolver cancelación", "Resolve cancellation"),
+        ("La última actualización no se ha completado. Puedes seguir usando tu versión actual si cancelaste antes de que se copiaran archivos, cerraste el instalador y comprobaste que puedes abrir, editar y guardar documentos. Si no estás seguro, pulsa Más tarde y consulta la ayuda.", "The last update did not finish. You can keep using your current version if you cancelled before files were copied, closed the installer and checked that you can open, edit and save documents. If unsure, select Later and see the help documentation."),
+        ("Continuar con mi versión", "Keep my current version"),
         ("Cierra todos los instaladores antes de resolver la interrupción.", "Close all installers before resolving the interruption."),
     };
     private static readonly Dictionary<string,string> English=Strings.ToDictionary(p=>p.Es,p=>p.En,StringComparer.Ordinal);
