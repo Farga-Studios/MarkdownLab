@@ -101,6 +101,29 @@ public partial class MainWindow
                 recovery.CancelPrepared(t.Id,running);
             return;
         }
+        if(assessment.Status==RecoveryStatus.Interrupted && t.Phase is (UpdatePhase.HandoffStarted or UpdatePhase.AwaitingHealthCheck)
+            && !new InstallerExitEvidence(folder).HasCompletion(t.Id))
+        {
+            if(RecoveryPrompt(L.T("Solo si cancelaste antes de copiar archivos: confirma que el instalador está cerrado y que has probado correctamente la apertura, edición y guardado con la versión anterior. Si comenzó la copia o tienes dudas, utiliza la recuperación manual."), L.T("Resolver cancelación"))!=1)return;
+            var processes=Process.GetProcesses();
+            try
+            {
+                if(processes.Any(p=>p.ProcessName.Contains("-win-x64-setup",StringComparison.OrdinalIgnoreCase) ||
+                    p.ProcessName.Contains("MarkdownLab-Setup",StringComparison.OrdinalIgnoreCase)))
+                {
+                    UpdateNotice(L.T("Cierra todos los instaladores antes de resolver la interrupción."));
+                    return;
+                }
+            }
+            finally {foreach(var p in processes)p.Dispose();}
+            if(new InstallerExitEvidence(folder).HasCompletion(t.Id))
+            {
+                UpdateNotice(L.T("Actualización interrumpida. No borres el registro. Consulta la documentación de recuperación manual."));
+                return;
+            }
+            recovery.ResolveInterrupted(t.Id,running,true,true,true);
+            return;
+        }
         if(!new InstallerExitEvidence(folder).HasCompletion(t.Id))
         {
             UpdateNotice(L.T("No hay justificante de instalación completada. Se requiere recuperación manual."));
