@@ -104,7 +104,7 @@ public partial class MainWindow
         if(assessment.Status==RecoveryStatus.Interrupted && t.Phase is (UpdatePhase.HandoffStarted or UpdatePhase.AwaitingHealthCheck)
             && !new InstallerExitEvidence(folder).HasCompletion(t.Id))
         {
-            if(RecoveryPrompt(L.T("Solo si cancelaste antes de copiar archivos: confirma que el instalador está cerrado y que has probado correctamente la apertura, edición y guardado con la versión anterior. Si comenzó la copia o tienes dudas, utiliza la recuperación manual."), L.T("Resolver cancelación"))!=1)return;
+            if(RecoveryPrompt(L.T("La última actualización no se ha completado. Puedes seguir usando tu versión actual si cancelaste antes de que se copiaran archivos, cerraste el instalador y comprobaste que puedes abrir, editar y guardar documentos. Si no estás seguro, pulsa Más tarde y consulta la ayuda."), L.T("Continuar con mi versión"))!=1)return;
             var processes=Process.GetProcesses();
             try
             {
