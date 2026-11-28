@@ -97,7 +97,7 @@ public partial class MainWindow
         if(assessment.Transaction is not { } t){UpdateNotice(L.T("Registro de actualización no válido. Consulta la documentación de recuperación."));return;}
         if(assessment.Status==RecoveryStatus.Interrupted && t.Phase==UpdatePhase.Prepared)
         {
-            if(MessageBox.Show(L.T("¿Cancelar la actualización preparada?"),"MarkdownLab",MessageBoxButton.YesNo)==MessageBoxResult.Yes)
+            if(RecoveryPrompt(L.T("¿Cancelar la actualización preparada?"), L.T("Cancelar actualización"))==1)
                 recovery.CancelPrepared(t.Id,running);
             return;
         }
@@ -108,18 +108,18 @@ public partial class MainWindow
         }
         if(assessment.Status is RecoveryStatus.HealthCheckRequired or RecoveryStatus.RollbackHealthCheckRequired)
         {
-            var choice=MessageBox.Show(L.T("¿Ha terminado el instalador y has comprobado que puedes abrir, editar y guardar un documento de prueba? Sí: confirmar. No: solicitar recuperación. Cancelar: más tarde."),"MarkdownLab",MessageBoxButton.YesNoCancel);
-            if(choice==MessageBoxResult.Yes)
+            var choice=RecoveryPrompt(L.T("¿Ha terminado el instalador y has comprobado que puedes abrir, editar y guardar un documento de prueba?"), L.T("Confirmar funcionamiento"), assessment.Status==RecoveryStatus.HealthCheckRequired ? L.T("Restaurar versión anterior") : null);
+            if(choice==1)
             {
                 if(assessment.Status==RecoveryStatus.HealthCheckRequired) recovery.ConfirmHealthy(t.Id,running);
                 else recovery.ConfirmRollbackHealthy(t.Id,running);
                 return;
             }
-            if(choice!=MessageBoxResult.No || assessment.Status==RecoveryStatus.RollbackHealthCheckRequired)return;
+            if(choice!=2 || assessment.Status==RecoveryStatus.RollbackHealthCheckRequired)return;
         }
         if(assessment.Status is RecoveryStatus.HealthCheckRequired or RecoveryStatus.RecoveryRequired or RecoveryStatus.RollbackInterrupted)
         {
-            if(MessageBox.Show(L.T("¿Restaurar la versión anterior? Confirma que el instalador ha terminado, que tienes copias de seguridad y que tus datos son compatibles con la versión anterior. Se requiere un instalador firmado conservado."),"MarkdownLab",MessageBoxButton.YesNo)!=MessageBoxResult.Yes)return;
+            if(RecoveryPrompt(L.T("¿Restaurar la versión anterior? Confirma que el instalador ha terminado, que tienes copias de seguridad y que tus datos son compatibles con la versión anterior. Se requiere un instalador firmado conservado."), L.T("Restaurar versión anterior"))!=1)return;
             CaptureTab();
             if(documents.Any(d=>d.Dirty)&&!SaveAll())return;
             if(!ConfirmExit())return;
@@ -135,6 +135,27 @@ public partial class MainWindow
             return;
         }
         UpdateNotice(L.T("Actualización interrumpida. No borres el registro. Consulta la documentación de recuperación manual."));
+    }
+
+    private int RecoveryPrompt(string message, string primary, string? alternative=null)
+    {
+        int result=0;
+        var panel=new StackPanel{Margin=new Thickness(20),Width=480};
+        panel.Children.Add(new TextBlock{Text=message,TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,0,0,18)});
+        var buttons=new WrapPanel();
+        panel.Children.Add(buttons);
+        var dialog=CreateThemedDialog(L.T("Recuperación de actualizaciones"),panel);
+        void Add(string label,int value)
+        {
+            var button=new Button{Content=label,Margin=new Thickness(0,0,8,4),Padding=new Thickness(10,6,10,6)};
+            button.Click+=(_,_)=>{result=value;dialog.DialogResult=true;};
+            buttons.Children.Add(button);
+        }
+        Add(L.T("Más tarde"),0);
+        if(alternative is not null)Add(alternative,2);
+        Add(primary,1);
+        dialog.ShowDialog();
+        return result;
     }
 
     private void UpdateNotice(string message)
